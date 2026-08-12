@@ -1,0 +1,13 @@
+add admin request for the unverified users to publist product
+add verified users to publist products without admin request
+add order dashborad for users to track the odered product situation(to pay,to ship,to recieve,)
+add buy option to all product
+add payment methods for the buying menu
+add required details fillup for the buying menu
+add quantity of product 
+add type of product 
+add delivery option 
+add photo of product 
+add location if delecery option is set to selfpick up
+add personal and offical details for users profile
+live updates the treanding and home page with the parts listed in the selling listed.

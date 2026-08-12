@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GearShift Auto Parts | Sign In</title>
+	<style>
+		:root {
+			--bg: #081018;
+			--bg-2: #0d1722;
+			--panel: rgba(13, 23, 34, 0.86);
+			--panel-border: rgba(255, 255, 255, 0.10);
+			--text: #f3f7fb;
+			--muted: #9fb0c2;
+			--accent: #ff7a18;
+			--accent-2: #ffb347;
+			--field: rgba(255, 255, 255, 0.05);
+			--shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		html, body {
+			margin: 0;
+			min-height: 100%;
+		}
+
+		body {
+			font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			color: var(--text);
+			background:
+				radial-gradient(circle at top left, rgba(255, 122, 24, 0.20), transparent 30%),
+				radial-gradient(circle at bottom right, rgba(73, 145, 255, 0.18), transparent 28%),
+				linear-gradient(160deg, #061019 0%, #0b1723 52%, #081018 100%);
+			overflow-x: hidden;
+		}
+
+		.page {
+			min-height: 100vh;
+			display: grid;
+			grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+		}
+
+		.hero {
+			position: relative;
+			padding: 48px;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			isolation: isolate;
+			overflow: hidden;
+		}
+
+		.hero::before,
+		.hero::after {
+			content: "";
+			position: absolute;
+			border-radius: 999px;
+			filter: blur(10px);
+			opacity: 0.85;
+			z-index: -1;
+		}
+
+		.hero::before {
+			width: 360px;
+			height: 360px;
+			background: rgba(255, 122, 24, 0.14);
+			top: -120px;
+			left: -100px;
+		}
+
+		.hero::after {
+			width: 280px;
+			height: 280px;
+			background: rgba(84, 171, 255, 0.12);
+			bottom: -90px;
+			right: 10%;
+		}
+
+		.brand {
+			display: inline-flex;
+			align-items: center;
+			gap: 12px;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--text);
+			margin-bottom: 28px;
+		}
+
+		.home-link {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			margin-left: 14px;
+			padding: 10px 16px;
+			border-radius: 999px;
+			border: 1px solid rgba(255, 122, 24, 0.55);
+			background: linear-gradient(135deg, rgba(255, 122, 24, 0.96), rgba(255, 179, 71, 0.92));
+			color: #1d1307;
+			font-weight: 800;
+			font-size: 0.9rem;
+			letter-spacing: 0.02em;
+			text-decoration: none;
+			text-transform: none;
+			box-shadow: 0 12px 24px rgba(255, 122, 24, 0.28);
+			transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+		}
+
+		.home-link:hover {
+			text-decoration: none;
+			transform: translateY(-1px);
+			box-shadow: 0 16px 28px rgba(255, 122, 24, 0.34);
+			filter: saturate(1.05);
+		}
+
+		.brand-mark {
+			width: 44px;
+			height: 44px;
+			border-radius: 14px;
+			display: grid;
+			place-items: center;
+			background: linear-gradient(145deg, var(--accent) 0%, var(--accent-2) 100%);
+			color: #121212;
+			box-shadow: 0 12px 28px rgba(255, 122, 24, 0.35);
+			overflow: hidden;
+		}
+
+		.brand-mark svg {
+			width: 30px;
+			height: 30px;
+			display: block;
+		}
+
+		.brand-mark .logo-stroke {
+			fill: none;
+			stroke: #121212;
+			stroke-width: 2.8;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+
+		.brand-mark .logo-fill {
+			fill: #121212;
+		}
+
+		.hero-copy {
+			max-width: 620px;
+			margin-top: auto;
+			animation: rise 0.8s ease both;
+		}
+
+		.hero-copy h1 {
+			font-size: clamp(2.6rem, 4vw, 4.8rem);
+			line-height: 0.96;
+			margin: 0 0 18px;
+			text-wrap: balance;
+		}
+
+		.hero-copy p {
+			margin: 0 0 28px;
+			color: var(--muted);
+			font-size: 1.05rem;
+			line-height: 1.7;
+			max-width: 56ch;
+		}
+
+		.feature-grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 14px;
+		}
+
+		.feature {
+			padding: 18px;
+			border: 1px solid rgba(255, 255, 255, 0.10);
+			border-radius: 20px;
+			background: rgba(255, 255, 255, 0.03);
+			backdrop-filter: blur(16px);
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+		}
+
+		.feature strong {
+			display: block;
+			font-size: 1.05rem;
+			margin-bottom: 8px;
+		}
+
+		.feature span {
+			color: var(--muted);
+			font-size: 0.95rem;
+			line-height: 1.45;
+		}
+
+		.dashboard-card {
+			margin-top: 28px;
+			padding: 22px;
+			max-width: 440px;
+			border-radius: 24px;
+			border: 1px solid rgba(255, 255, 255, 0.10);
+			background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+			box-shadow: var(--shadow);
+			backdrop-filter: blur(18px);
+		}
+
+		.dashboard-card .tag {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 8px 12px;
+			border-radius: 999px;
+			background: rgba(255, 122, 24, 0.14);
+			color: #ffd2ae;
+			font-size: 0.85rem;
+			margin-bottom: 16px;
+		}
+
+		.dashboard-card h2 {
+			font-size: 1.3rem;
+			margin: 0 0 10px;
+		}
+
+		.dashboard-card p {
+			margin: 0;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		.db-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			margin-top: 12px;
+			padding: 8px 12px;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.06);
+			color: #d8e6f3;
+			font-size: 0.88rem;
+		}
+
+		.login-shell {
+			display: grid;
+			place-items: center;
+			padding: 28px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.04));
+			border-left: 1px solid rgba(255, 255, 255, 0.08);
+		}
+
+		.login-card {
+			width: min(100%, 460px);
+			padding: 34px;
+			border-radius: 28px;
+			border: 1px solid var(--panel-border);
+			background: var(--panel);
+			box-shadow: var(--shadow);
+			backdrop-filter: blur(20px);
+			animation: pop 0.8s ease both;
+		}
+
+		.login-card h2 {
+			margin: 0 0 10px;
+			font-size: 2rem;
+		}
+
+		.login-card > p {
+			margin: 0 0 26px;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		.form-group {
+			margin-bottom: 16px;
+		}
+
+		label {
+			display: inline-block;
+			margin-bottom: 8px;
+			color: #d6e2ee;
+			font-size: 0.95rem;
+			font-weight: 600;
+		}
+
+		input {
+			width: 100%;
+			padding: 14px 15px;
+			border-radius: 16px;
+			border: 1px solid rgba(255, 255, 255, 0.10);
+			background: var(--field);
+			color: var(--text);
+			font-size: 1rem;
+			outline: none;
+			transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+		}
+
+		input::placeholder {
+			color: #74889b;
+		}
+
+		input:focus {
+			border-color: rgba(255, 122, 24, 0.75);
+			box-shadow: 0 0 0 4px rgba(255, 122, 24, 0.15);
+			transform: translateY(-1px);
+		}
+
+		.form-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			margin: 8px 0 20px;
+			color: var(--muted);
+			font-size: 0.94rem;
+		}
+
+		.remember {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.remember input {
+			width: 16px;
+			height: 16px;
+			accent-color: var(--accent);
+		}
+
+		a {
+			color: #ffd2ae;
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
+		.button {
+			width: 100%;
+			border: 0;
+			border-radius: 16px;
+			padding: 14px 18px;
+			background: linear-gradient(135deg, var(--accent) 0%, #ff9f43 55%, var(--accent-2) 100%);
+			color: #1d1307;
+			font-size: 1rem;
+			font-weight: 800;
+			letter-spacing: 0.02em;
+			cursor: pointer;
+			box-shadow: 0 16px 30px rgba(255, 122, 24, 0.26);
+			transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+		}
+
+		.button:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 20px 36px rgba(255, 122, 24, 0.34);
+			filter: saturate(1.05);
+		}
+
+		.divider {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+			margin: 22px 0;
+			color: #90a0b2;
+			font-size: 0.9rem;
+		}
+
+		.divider::before,
+		.divider::after {
+			content: "";
+			height: 1px;
+			flex: 1;
+			background: rgba(255, 255, 255, 0.12);
+		}
+
+		.secondary-actions {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: 12px;
+		}
+
+		.ghost-button {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			gap: 10px;
+			padding: 13px 16px;
+			border-radius: 16px;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			color: var(--text);
+			background: rgba(255, 255, 255, 0.03);
+			text-decoration: none;
+			transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+		}
+
+		.ghost-button:hover {
+			transform: translateY(-1px);
+			border-color: rgba(255, 122, 24, 0.45);
+			background: rgba(255, 122, 24, 0.08);
+			text-decoration: none;
+		}
+
+		.footer-note {
+			margin-top: 20px;
+			text-align: center;
+			color: var(--muted);
+			font-size: 0.92rem;
+		}
+
+		.footer-note a {
+			font-weight: 700;
+		}
+
+		.mode-switch {
+			display: flex;
+			align-items: baseline;
+			gap: 8px;
+			flex-wrap: wrap;
+			margin-top: 12px;
+			color: var(--muted);
+			font-size: 0.95rem;
+		}
+
+		.mode-switch button {
+			padding: 0;
+			border: 0;
+			background: transparent;
+			color: #ffd2ae;
+			font: inherit;
+			font-weight: 700;
+			cursor: pointer;
+		}
+
+		.mode-switch button:hover {
+			text-decoration: underline;
+		}
+
+		.hidden {
+			display: none !important;
+		}
+
+		.status {
+			min-height: 24px;
+			margin: 0 0 16px;
+			font-size: 0.95rem;
+			color: #bfe4c2;
+		}
+
+		.status.error {
+			color: #ffb2a6;
+		}
+
+		@keyframes rise {
+			from {
+				opacity: 0;
+				transform: translateY(18px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		@keyframes pop {
+			from {
+				opacity: 0;
+				transform: translateY(14px) scale(0.98);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0) scale(1);
+			}
+		}
+
+		@media (max-width: 980px) {
+			.page {
+				grid-template-columns: 1fr;
+			}
+
+			.hero {
+				padding: 28px 22px 18px;
+			}
+
+			.hero-copy h1 {
+				font-size: clamp(2.2rem, 8vw, 3.4rem);
+			}
+
+			.feature-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.login-shell {
+				border-left: 0;
+				padding-top: 12px;
+			}
+		}
+
+		@media (max-width: 540px) {
+			.hero,
+			.login-shell {
+				padding-left: 16px;
+				padding-right: 16px;
+			}
+
+			.login-card {
+				padding: 24px 20px;
+				border-radius: 22px;
+			}
+
+			.form-row,
+			.secondary-actions {
+				grid-template-columns: 1fr;
+				flex-direction: column;
+				align-items: flex-start;
+			}
+		}
+	</style>
+</head>
+<body>
+	<main class="page">
+		<section class="hero">
+			<div>
+				<div class="brand">
+					<div class="brand-mark" aria-hidden="true">
+						<svg viewBox="0 0 64 64" role="img" focusable="false" aria-label="Uploaded G gear logo">
+						  <defs>
+							<!-- mask to cut the 'G' out of the gear, making it transparent -->
+							<mask id="g-cut-login">
+							  <rect width="100%" height="100%" fill="white" />
+							  <path d="M40 22 A10 10 0 1 0 24 34 L34 34" stroke="black" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+							</mask>
+						  </defs>
+
+						  <!-- gear filled, with G cut out by mask -->
+						  <g mask="url(#g-cut-login)" fill="#121212">
+							<circle cx="32" cy="32" r="20"></circle>
+							<!-- teeth (12) -->
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(0 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(30 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(60 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(90 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(120 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(150 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(180 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(210 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(240 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(270 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(300 32 32)"></rect>
+							<rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(330 32 32)"></rect>
+						  </g>
+						</svg>
+					</div>
+					GearShift Auto Parts
+					<a class="home-link" href="index.html">Home</a>
+				</div>
+
+				<div class="hero-copy">
+					<h1>Your trusted vehicle parts marketplace.</h1>
+					<p>
+						GearShift Auto Parts is a modern online marketplace where buyers and sellers connect for vehicle parts, accessories, and automotive essentials in one trusted shopping experience.
+					</p>
+
+					<div class="feature-grid">
+						<div class="feature">
+						<strong>Huge parts catalog</strong>
+						<span>Explore thousands of listings for engines, brakes, batteries, filters, and performance upgrades.</span>
+					</div>
+					<div class="feature">
+						<strong>Buyer & seller hub</strong>
+						<span>List parts, compare offers, and shop securely from verified automotive sellers.</span>
+					</div>
+					<div class="feature">
+						<strong>Fast delivery</strong>
+						<span>Enjoy quick delivery, easy returns, and support that helps you find the right match.</span>
+						</div>
+					</div>
+
+					<div class="dashboard-card">
+						<div class="tag">A trusted online marketplace for auto parts</div>
+						<h2>Shop and sell with confidence.</h2>
+						<p>
+							From daily essentials to performance upgrades, manage orders and listings in one modern marketplace.
+						</p>
+		
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="login-shell">
+			<div class="login-card">
+				<h2 id="form-title">Welcome back</h2>
+				<p id="form-copy">Use your store account to continue shopping for parts, accessories, and service essentials.</p>
+				<div id="form-status" class="status" aria-live="polite"></div>
+
+				<form id="auth-form" novalidate>
+					<div class="form-group hidden" id="name-group">
+						<label for="name">Full name</label>
+						<input id="name" name="name" type="text" placeholder="Your name" autocomplete="name">
+					</div>
+
+					<div class="form-group">
+						<label for="email">Email address</label>
+						<input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+					</div>
+
+					<div class="form-group">
+						<label for="password">Password</label>
+						<input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+					</div>
+
+					<div class="form-group hidden" id="confirm-group">
+						<label for="confirm-password">Confirm password</label>
+						<input id="confirm-password" name="confirm-password" type="password" placeholder="Re-enter your password" autocomplete="new-password">
+					</div>
+
+					<div class="form-row">
+						<label class="remember hidden" id="remember-wrap">
+							<input type="checkbox" name="remember">
+							Remember me
+						</label>
+						<label class="remember">
+							<input type="checkbox" name="marketing" id="marketing" class="hidden">
+							<span id="marketing-copy">I agree to receive order updates and occasional parts deals.</span>
+						</label>
+						<a href="#" id="forgot-link">Forgot password?</a>
+					</div>
+
+					<button class="button" id="submit-button" type="submit">Sign In</button>
+				</form>
+
+				<div class="divider">or continue with</div>
+
+				<div class="secondary-actions">
+					<button class="ghost-button" type="button" id="google-login">Google</button>
+					<button class="ghost-button" type="button" id="apple-login">Apple ID</button>
+				</div>
+
+				<div class="footer-note">
+					<div class="mode-switch" id="mode-switch">
+						<span id="mode-prompt">New to GearShift?</span>
+						<button type="button" id="toggle-mode">Create an account</button>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script>
+		const form = document.getElementById('auth-form');
+		const title = document.getElementById('form-title');
+		const copy = document.getElementById('form-copy');
+		const status = document.getElementById('form-status');
+		const submitButton = document.getElementById('submit-button');
+		const toggleMode = document.getElementById('toggle-mode');
+		const modePrompt = document.getElementById('mode-prompt');
+		const nameGroup = document.getElementById('name-group');
+		const confirmGroup = document.getElementById('confirm-group');
+		const rememberWrap = document.getElementById('remember-wrap');
+		const forgotLink = document.getElementById('forgot-link');
+		const marketing = document.getElementById('marketing');
+		const marketingCopy = document.getElementById('marketing-copy');
+		const googleLogin = document.getElementById('google-login');
+		const appleLogin = document.getElementById('apple-login');
+		const email = document.getElementById('email');
+		const password = document.getElementById('password');
+		const nameInput = document.getElementById('name');
+		const confirmPassword = document.getElementById('confirm-password');
+
+		let mode = 'login';
+
+		function setMessage(text, isError = false) {
+			status.textContent = text;
+			status.classList.toggle('error', isError);
+		}
+
+		function setMode(nextMode) {
+			mode = nextMode;
+			const isSignup = mode === 'signup';
+
+			title.textContent = isSignup ? 'Create your account' : 'Welcome back';
+			copy.textContent = isSignup
+				? 'Create a GearShift account to save vehicles, track parts, and speed up future orders.'
+				: 'Use your store account to continue shopping for parts, accessories, and service essentials.';
+			submitButton.textContent = isSignup ? 'Create Account' : 'Sign In';
+			toggleMode.textContent = isSignup ? 'Sign in instead' : 'Create an account';
+			modePrompt.textContent = isSignup ? 'Already have an account?' : 'New to GearShift?';
+			nameGroup.classList.toggle('hidden', !isSignup);
+			confirmGroup.classList.toggle('hidden', !isSignup);
+			rememberWrap.classList.toggle('hidden', isSignup);
+			forgotLink.classList.toggle('hidden', isSignup);
+			marketingCopy.textContent = isSignup
+				? 'I agree to receive order updates, account emails, and occasional parts deals.'
+				: 'Remember this device for faster sign-in next time.';
+			marketing.checked = isSignup;
+			setMessage('');
+			form.reset();
+			if (isSignup) {
+				nameInput.required = true;
+				confirmPassword.required = true;
+				password.autocomplete = 'new-password';
+				confirmPassword.autocomplete = 'new-password';
+			} else {
+				nameInput.required = false;
+				confirmPassword.required = false;
+				password.autocomplete = 'current-password';
+				confirmPassword.value = '';
+			}
+		}
+
+		toggleMode.addEventListener('click', () => {
+			setMode(mode === 'login' ? 'signup' : 'login');
+		});
+
+		async function submitAuth(modeToSubmit) {
+			if (location.protocol === 'file:') {
+				setMessage('Open this page through the Node server so the database login can work.', true);
+				return null;
+			}
+
+			const payload = {
+				name: nameInput.value.trim(),
+				email: email.value.trim(),
+				password: password.value
+			};
+
+			const response = await fetch(modeToSubmit === 'signup' ? '/api/register' : '/api/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.error || 'Request failed.');
+			}
+
+			return data.user;
+		}
+
+		function handleSocialLogin(provider) {
+			setMessage(`${provider} sign-in is not connected in this database demo yet.`, true);
+		}
+
+		googleLogin.addEventListener('click', () => handleSocialLogin('Google'));
+		appleLogin.addEventListener('click', () => handleSocialLogin('Apple ID'));
+
+		forgotLink.addEventListener('click', (event) => {
+			event.preventDefault();
+			setMessage('Password reset is not connected yet on this demo page.', true);
+		});
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+
+			if (mode === 'signup') {
+				if (!nameInput.value.trim()) {
+					setMessage('Enter your full name to create an account.', true);
+					nameInput.focus();
+					return;
+				}
+
+				if (password.value.length < 6) {
+					setMessage('Use a password with at least 6 characters.', true);
+					password.focus();
+					return;
+				}
+
+				if (password.value !== confirmPassword.value) {
+					setMessage('Passwords do not match.', true);
+					confirmPassword.focus();
+					return;
+				}
+
+				try {
+					const user = await submitAuth('signup');
+					if (!user) {
+						return;
+					}
+
+					setMessage(`Account created for ${user.name}. You can now sign in.`);
+					setMode('login');
+					email.value = user.email;
+					password.focus();
+				} catch (error) {
+					setMessage(error.message, true);
+				}
+				return;
+			}
+
+			try {
+				const user = await submitAuth('login');
+				if (!user) {
+					return;
+				}
+
+				// Determine redirect based on user role
+				const redirectUrl = user.role === 'admin' ? 'dashboard.html' : 'index.html';
+				const redirectMessage = user.role === 'admin' 
+					? `Signed in as ${user.name || user.email}. Redirecting to dashboard.`
+					: `Signed in as ${user.name || user.email}. Redirecting to home page.`;
+
+				setMessage(redirectMessage);
+				sessionStorage.setItem('gearshift-session-user', JSON.stringify(user));
+				window.setTimeout(() => {
+					window.location.href = redirectUrl;
+				}, 900);
+			} catch (error) {
+				setMessage(error.message, true);
+			}
+		});
+
+		setMode('login');
+	</script>
+</body>
+</html>

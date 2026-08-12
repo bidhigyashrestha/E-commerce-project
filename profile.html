@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GearShift Auto Parts | Profile</title>
+  <style>
+    :root {
+      --bg: #081018;
+      --panel: rgba(13, 23, 34, 0.86);
+      --panel-border: rgba(255, 255, 255, 0.10);
+      --text: #f3f7fb;
+      --muted: #9fb0c2;
+      --accent: #ff7a18;
+      --accent-2: #ffb347;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 122, 24, 0.22), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(84, 171, 255, 0.16), transparent 28%),
+        linear-gradient(160deg, #061019 0%, #0b1723 52%, #081018 100%);
+      overflow-x: hidden;
+    }
+
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0 26px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #121212;
+      box-shadow: 0 12px 28px rgba(255, 122, 24, 0.35);
+      overflow: hidden;
+    }
+
+    .brand-mark svg {
+      width: 30px;
+      height: 30px;
+      display: block;
+    }
+
+    .brand-mark .logo-stroke {
+      fill: none;
+      stroke: #121212;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-mark .logo-fill {
+      fill: #121212;
+    }
+
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .nav a:hover { color: var(--text); }
+
+    .shell {
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      padding: 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 122, 24, 0.14);
+      color: #ffd2ae;
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2.2rem, 4vw, 4rem);
+      line-height: 1;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    .card {
+      border-radius: 22px;
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .field label {
+      color: #d6e2ee;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .field strong {
+      font-size: 1rem;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, #ff9f43 55%, var(--accent-2) 100%);
+      color: #1d1307;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 16px 30px rgba(255, 122, 24, 0.26);
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .status {
+      margin-top: 16px;
+      min-height: 24px;
+      color: #bfe4c2;
+    }
+
+    .status.error {
+      color: #ffb2a6;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img" focusable="false" aria-label="Uploaded G gear logo">
+            <defs>
+              <mask id="g-cut-profile">
+                <rect width="100%" height="100%" fill="white" />
+                <path d="M40 22 A10 10 0 1 0 24 34 L34 34" stroke="black" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+              </mask>
+            </defs>
+            <g mask="url(#g-cut-profile)" fill="#121212">
+              <circle cx="32" cy="32" r="20"></circle>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(0 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(30 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(60 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(90 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(120 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(150 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(180 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(210 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(240 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(270 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(300 32 32)"></rect>
+              <rect x="31" y="2" width="2.6" height="6" rx="0.8" transform="rotate(330 32 32)"></rect>
+            </g>
+          </svg>
+        </div>
+        GearShift Auto Parts
+      </div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+      </nav>
+    </header>
+
+    <section class="shell hero">
+      <div>
+        <div class="eyebrow">Profile</div>
+        <h1>Your account details</h1>
+        <p>These details come from the signed-in session. If no user is logged in, you can return to the login page.</p>
+
+        <div id="profile-missing" class="card hidden" style="margin-top: 22px;">
+          <strong style="display:block; margin-bottom: 8px; font-size: 1.1rem;">No user session found</strong>
+          <p>You are not logged in right now.</p>
+          <div class="actions">
+            <a class="button" href="login.html">Go to login</a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card" id="profile-card">
+        <div class="field">
+          <label>Name</label>
+          <strong id="profile-name">-</strong>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <strong id="profile-email">-</strong>
+        </div>
+        <div class="field">
+          <label>Created</label>
+          <strong id="profile-created">-</strong>
+        </div>
+        <div class="actions">
+          <a class="button secondary" href="index.html">Back to home</a>
+          <button class="button" id="logout-button" type="button">Log out</button>
+        </div>
+        <div id="profile-status" class="status" aria-live="polite"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const profileCard = document.getElementById('profile-card');
+    const profileMissing = document.getElementById('profile-missing');
+    const profileName = document.getElementById('profile-name');
+    const profileEmail = document.getElementById('profile-email');
+    const profileCreated = document.getElementById('profile-created');
+    const logoutButton = document.getElementById('logout-button');
+    const profileStatus = document.getElementById('profile-status');
+
+    function setStatus(text, isError = false) {
+      profileStatus.textContent = text;
+      profileStatus.classList.toggle('error', isError);
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return 'Unknown';
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleString();
+    }
+
+    try {
+      const sessionUser = JSON.parse(sessionStorage.getItem('gearshift-session-user') || 'null');
+      if (!sessionUser) {
+        profileCard.classList.add('hidden');
+        profileMissing.classList.remove('hidden');
+      } else {
+        profileName.textContent = sessionUser.name || 'Guest';
+        profileEmail.textContent = sessionUser.email || '-';
+        profileCreated.textContent = formatDate(sessionUser.createdAt);
+      }
+    } catch (_error) {
+      profileCard.classList.add('hidden');
+      profileMissing.classList.remove('hidden');
+    }
+
+    logoutButton.addEventListener('click', () => {
+      sessionStorage.removeItem('gearshift-session-user');
+      setStatus('You have been logged out. Redirecting to login...');
+      window.setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 800);
+    });
+  </script>
+</body>
+</html>

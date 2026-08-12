@@ -1,0 +1,15 @@
+{
+  "name": "gearshift-auto-parts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GearShift Auto Parts login and marketplace demo with a SQLite-backed authentication flow.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "sql.js": "^1.11.0"
+  }
+}
