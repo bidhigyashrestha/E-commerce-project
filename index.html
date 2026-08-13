@@ -305,6 +305,184 @@
       color: #ffffff;
     }
 
+    /* Cart / wishlist nav icon buttons */
+    .icon-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      color: var(--text);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .icon-btn svg {
+      width: 19px;
+      height: 19px;
+      display: block;
+    }
+
+    .icon-btn.wishlist-active svg {
+      fill: var(--accent);
+      stroke: var(--accent);
+    }
+
+    .icon-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #1d1307;
+      font-size: 0.68rem;
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .icon-badge.visible { display: flex; }
+
+    .nav-panel-wrap {
+      position: relative;
+    }
+
+    .nav-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 340px;
+      max-width: 90vw;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      z-index: 50;
+      padding: 16px;
+    }
+
+    .nav-panel h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .nav-panel-items {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .nav-panel-empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 12px 0;
+      text-align: center;
+    }
+
+    .panel-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .panel-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .panel-item-name {
+      font-weight: 700;
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel-item-price {
+      color: #ffd2ae;
+      font-weight: 700;
+      font-size: 0.82rem;
+      margin-top: 2px;
+    }
+
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .qty-control button {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .qty-control span {
+      font-size: 0.84rem;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    .panel-item-remove {
+      background: none;
+      border: 0;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: underline;
+      flex-shrink: 0;
+    }
+
+    .panel-item-remove:hover { color: var(--text); }
+
+    .panel-item-move {
+      background: none;
+      border: 0;
+      color: #ffd2ae;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: underline;
+      flex-shrink: 0;
+    }
+
+    .nav-panel-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
+      font-weight: 800;
+    }
+
     .hero, .card, .section {
       border: 1px solid var(--panel-border);
       background: var(--panel);
@@ -394,12 +572,26 @@
       font-weight: 800;
       text-decoration: none;
       box-shadow: 0 16px 30px rgba(255, 122, 24, 0.26);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.95rem;
     }
 
     .button.secondary {
       background: rgba(255, 255, 255, 0.04);
       color: var(--text);
       border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .button.small {
+      padding: 10px 14px;
+      font-size: 0.9rem;
+    }
+
+    .button:disabled {
+      opacity: 0.65;
+      cursor: default;
       box-shadow: none;
     }
 
@@ -464,6 +656,36 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .wishlist-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .wishlist-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .wishlist-toggle.active {
+      border-color: rgba(255, 122, 24, 0.55);
+      background: rgba(255, 122, 24, 0.14);
+    }
+
+    .wishlist-toggle.active svg {
+      fill: var(--accent);
+      stroke: var(--accent);
     }
 
     .listing-grid { grid-template-columns: repeat(3, 1fr); }
@@ -478,6 +700,35 @@
       margin-top: 10px;
       color: #ffd2ae;
       font-weight: 800;
+    }
+
+    /* Toast */
+    #toast-stack {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    .toast {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      animation: toast-in 0.2s ease;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .footer {
@@ -502,6 +753,9 @@
         order: 3;
         max-width: 100%;
         flex-basis: 100%;
+      }
+      .nav-panel {
+        width: 92vw;
       }
     }
   </style>
@@ -565,7 +819,42 @@
       </div>
 
       <nav class="nav">
+        <div class="nav-panel-wrap" id="wishlist-panel-wrap">
+          <button type="button" class="icon-btn" id="wishlist-nav-btn" aria-label="Wishlist" title="Wishlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21s-7.5-4.6-10-9.2C0.3 8.4 1.8 4.8 5.2 4.1c2-.4 3.9.5 5 2.1 1.1-1.6 3-2.5 5-2.1 3.4.7 4.9 4.3 3.2 7.7C19.5 16.4 12 21 12 21z"></path>
+            </svg>
+            <span class="icon-badge" id="wishlist-badge">0</span>
+          </button>
+          <div class="nav-panel hidden" id="wishlist-panel">
+            <h3>Wishlist</h3>
+            <div class="nav-panel-items" id="wishlist-panel-items"></div>
+            <div class="nav-panel-empty hidden" id="wishlist-panel-empty">Your wishlist is empty.</div>
+          </div>
+        </div>
+
+        <div class="nav-panel-wrap" id="cart-panel-wrap">
+          <button type="button" class="icon-btn" id="cart-nav-btn" aria-label="Cart" title="Cart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="19" cy="21" r="1"></circle>
+              <path d="M1 1h3.6l2.6 13.2a2 2 0 0 0 2 1.6h9a2 2 0 0 0 2-1.6L22 6H5.2"></path>
+            </svg>
+            <span class="icon-badge" id="cart-badge">0</span>
+          </button>
+          <div class="nav-panel hidden" id="cart-panel">
+            <h3>Cart</h3>
+            <div class="nav-panel-items" id="cart-panel-items"></div>
+            <div class="nav-panel-empty hidden" id="cart-panel-empty">Your cart is empty.</div>
+            <div class="nav-panel-footer">
+              <span>Total</span>
+              <span id="cart-total">$0.00</span>
+            </div>
+          </div>
+        </div>
+
         <a href="#categories" class="categories-link">Categories</a>
+
         <a href="dashboard.html" class="dashboard-link">Dashboard</a>
         <a id="dashboard-nav-link" href="dashboard.html" class="dashboard-link hidden">Dashboard</a>
         <a id="logout-nav-link" href="login.html" class="logout-link">Logout</a>
@@ -620,9 +909,10 @@
     </footer>
   </main>
 
+  <div id="toast-stack" aria-live="polite"></div>
+
   <script>
     const dashboardNavLink = document.getElementById('dashboard-nav-link');
-    const authNavLink = document.getElementById('auth-nav-link');
     const logoutNavLink = document.getElementById('logout-nav-link');
     const categoriesVehicleType = document.getElementById('categories-vehicle-type');
     const categoriesGrid = document.getElementById('categories-grid');
@@ -718,6 +1008,162 @@
       return Number.isFinite(numeric) ? `$${numeric.toFixed(2)}` : String(price);
     }
 
+    /* ============================================================
+       Cart & Wishlist store
+       Persisted per-browser in localStorage so it survives reloads
+       (and, if the user is logged in, is scoped to their account so
+       different accounts on the same browser don't share carts).
+       ============================================================ */
+    const CartStore = (() => {
+      function getSessionUser() {
+        try {
+          return JSON.parse(sessionStorage.getItem('gearshift-session-user') || 'null');
+        } catch (_e) {
+          return null;
+        }
+      }
+
+      function storageKey(kind) {
+        const user = getSessionUser();
+        const scope = user ? (user.id || user.email || 'user') : 'guest';
+        return `gearshift-${kind}:${scope}`;
+      }
+
+      function read(kind) {
+        try {
+          const raw = localStorage.getItem(storageKey(kind));
+          const parsed = raw ? JSON.parse(raw) : [];
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (_e) {
+          return [];
+        }
+      }
+
+      function write(kind, list) {
+        try {
+          localStorage.setItem(storageKey(kind), JSON.stringify(list));
+        } catch (_e) {
+          /* storage unavailable (e.g. private mode) — fail silently */
+        }
+      }
+
+      function partSnapshot(part) {
+        return {
+          id: part.id,
+          name: part.name,
+          price: part.price,
+          description: part.description
+        };
+      }
+
+      // ---- Cart ----
+      function getCart() {
+        return read('cart');
+      }
+
+      function addToCart(part, qty = 1) {
+        const cart = getCart();
+        const existing = cart.find((item) => item.id === part.id);
+        if (existing) {
+          existing.qty += qty;
+        } else {
+          cart.push({ ...partSnapshot(part), qty });
+        }
+        write('cart', cart);
+        return cart;
+      }
+
+      function setCartQty(id, qty) {
+        let cart = getCart();
+        if (qty <= 0) {
+          cart = cart.filter((item) => item.id !== id);
+        } else {
+          const item = cart.find((entry) => entry.id === id);
+          if (item) item.qty = qty;
+        }
+        write('cart', cart);
+        return cart;
+      }
+
+      function removeFromCart(id) {
+        const cart = getCart().filter((item) => item.id !== id);
+        write('cart', cart);
+        return cart;
+      }
+
+      function isInCart(id) {
+        return getCart().some((item) => item.id === id);
+      }
+
+      function cartCount() {
+        return getCart().reduce((sum, item) => sum + item.qty, 0);
+      }
+
+      function cartTotal() {
+        return getCart().reduce((sum, item) => sum + (Number(item.price) || 0) * item.qty, 0);
+      }
+
+      // ---- Wishlist ----
+      function getWishlist() {
+        return read('wishlist');
+      }
+
+      function isInWishlist(id) {
+        return getWishlist().some((item) => item.id === id);
+      }
+
+      function toggleWishlist(part) {
+        let wishlist = getWishlist();
+        if (wishlist.some((item) => item.id === part.id)) {
+          wishlist = wishlist.filter((item) => item.id !== part.id);
+        } else {
+          wishlist.push(partSnapshot(part));
+        }
+        write('wishlist', wishlist);
+        return wishlist;
+      }
+
+      function removeFromWishlist(id) {
+        const wishlist = getWishlist().filter((item) => item.id !== id);
+        write('wishlist', wishlist);
+        return wishlist;
+      }
+
+      function wishlistCount() {
+        return getWishlist().length;
+      }
+
+      return {
+        getCart, addToCart, setCartQty, removeFromCart, isInCart, cartCount, cartTotal,
+        getWishlist, isInWishlist, toggleWishlist, removeFromWishlist, wishlistCount
+      };
+    })();
+
+    // Keep an in-memory index of every part rendered on the page, keyed by id,
+    // so wishlist/cart actions (which only receive an id) can look up full details.
+    const partIndex = new Map();
+
+    function indexParts(parts) {
+      parts.forEach((part) => partIndex.set(String(part.id), part));
+    }
+
+    function showToast(message) {
+      const stack = document.getElementById('toast-stack');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      stack.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 2200);
+    }
+
+    function heartIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21s-7.5-4.6-10-9.2C0.3 8.4 1.8 4.8 5.2 4.1c2-.4 3.9.5 5 2.1 1.1-1.6 3-2.5 5-2.1 3.4.7 4.9 4.3 3.2 7.7C19.5 16.4 12 21 12 21z"></path>
+      </svg>`;
+    }
+
     function renderPartCards(container, emptyState, parts, actionLabel) {
       if (!parts.length) {
         container.innerHTML = '';
@@ -725,17 +1171,28 @@
         return;
       }
 
+      indexParts(parts);
       emptyState.classList.add('hidden');
-      container.innerHTML = parts.map((part) => `
+      container.innerHTML = parts.map((part) => {
+        const inCart = CartStore.isInCart(part.id);
+        const inWishlist = CartStore.isInWishlist(part.id);
+        return `
         <div class="listing">
           <strong>${escapeHtml(part.name)}</strong>
           <span>${escapeHtml(part.description)}</span>
           <div class="price">${formatPrice(part.price)}</div>
           <div class="listing-actions">
-            <a href="product-details.html?part=${encodeURIComponent(part.id)}" class="button" style="display: inline-flex; padding: 10px 14px; font-size: 0.9rem;">${actionLabel}</a>
+            <a href="product-details.html?part=${encodeURIComponent(part.id)}" class="button small secondary">${actionLabel}</a>
+            <button type="button" class="button small add-to-cart-btn" data-part-id="${escapeHtml(part.id)}" ${inCart ? 'disabled' : ''}>
+              ${inCart ? 'In cart' : 'Add to cart'}
+            </button>
+            <button type="button" class="wishlist-toggle${inWishlist ? ' active' : ''}" data-part-id="${escapeHtml(part.id)}" aria-label="Toggle wishlist" title="Add to wishlist">
+              ${heartIcon()}
+            </button>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     async function loadHomepageContent() {
@@ -748,6 +1205,201 @@
 
       renderPartCards(featuredGrid, featuredEmpty, data.featuredParts || [], 'View details');
       renderPartCards(trendingGrid, trendingEmpty, data.trendingParts || [], 'View details');
+    }
+
+    // ---- Add to cart / wishlist click handling (event delegation) ----
+    document.addEventListener('click', (event) => {
+      const cartBtn = event.target.closest('.add-to-cart-btn');
+      if (cartBtn) {
+        const id = cartBtn.getAttribute('data-part-id');
+        const part = partIndex.get(String(id));
+        if (part) {
+          CartStore.addToCart(part, 1);
+          cartBtn.disabled = true;
+          cartBtn.textContent = 'In cart';
+          showToast(`${part.name} added to cart`);
+          renderCartPanel();
+          updateBadges();
+        }
+        return;
+      }
+
+      const wishBtn = event.target.closest('.wishlist-toggle');
+      if (wishBtn) {
+        const id = wishBtn.getAttribute('data-part-id');
+        const part = partIndex.get(String(id));
+        if (part) {
+          CartStore.toggleWishlist(part);
+          const active = CartStore.isInWishlist(id);
+          wishBtn.classList.toggle('active', active);
+          showToast(active ? `${part.name} added to wishlist` : `${part.name} removed from wishlist`);
+          renderWishlistPanel();
+          updateBadges();
+        }
+        return;
+      }
+    });
+
+    // ---- Cart / wishlist nav panels ----
+    const cartNavBtn = document.getElementById('cart-nav-btn');
+    const cartPanel = document.getElementById('cart-panel');
+    const cartPanelItems = document.getElementById('cart-panel-items');
+    const cartPanelEmpty = document.getElementById('cart-panel-empty');
+    const cartTotalEl = document.getElementById('cart-total');
+    const cartBadge = document.getElementById('cart-badge');
+
+    const wishlistNavBtn = document.getElementById('wishlist-nav-btn');
+    const wishlistPanel = document.getElementById('wishlist-panel');
+    const wishlistPanelItems = document.getElementById('wishlist-panel-items');
+    const wishlistPanelEmpty = document.getElementById('wishlist-panel-empty');
+    const wishlistBadge = document.getElementById('wishlist-badge');
+
+    function closePanels(except) {
+      if (except !== 'cart') cartPanel.classList.add('hidden');
+      if (except !== 'wishlist') wishlistPanel.classList.add('hidden');
+    }
+
+    function renderCartPanel() {
+      const cart = CartStore.getCart();
+      if (!cart.length) {
+        cartPanelItems.innerHTML = '';
+        cartPanelEmpty.classList.remove('hidden');
+      } else {
+        cartPanelEmpty.classList.add('hidden');
+        cartPanelItems.innerHTML = cart.map((item) => `
+          <div class="panel-item">
+            <div class="panel-item-info">
+              <div class="panel-item-name">${escapeHtml(item.name)}</div>
+              <div class="panel-item-price">${formatPrice(item.price)}</div>
+              <div class="qty-control">
+                <button type="button" class="cart-qty-decrease" data-part-id="${escapeHtml(item.id)}">−</button>
+                <span>${item.qty}</span>
+                <button type="button" class="cart-qty-increase" data-part-id="${escapeHtml(item.id)}">+</button>
+              </div>
+            </div>
+            <button type="button" class="panel-item-remove cart-remove-btn" data-part-id="${escapeHtml(item.id)}">Remove</button>
+          </div>
+        `).join('');
+      }
+      cartTotalEl.textContent = formatPrice(CartStore.cartTotal());
+    }
+
+    function renderWishlistPanel() {
+      const wishlist = CartStore.getWishlist();
+      if (!wishlist.length) {
+        wishlistPanelItems.innerHTML = '';
+        wishlistPanelEmpty.classList.remove('hidden');
+      } else {
+        wishlistPanelEmpty.classList.add('hidden');
+        wishlistPanelItems.innerHTML = wishlist.map((item) => `
+          <div class="panel-item">
+            <div class="panel-item-info">
+              <div class="panel-item-name">${escapeHtml(item.name)}</div>
+              <div class="panel-item-price">${formatPrice(item.price)}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+              <button type="button" class="panel-item-move wishlist-move-btn" data-part-id="${escapeHtml(item.id)}">Add to cart</button>
+              <button type="button" class="panel-item-remove wishlist-remove-btn" data-part-id="${escapeHtml(item.id)}">Remove</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function updateBadges() {
+      const cartCount = CartStore.cartCount();
+      cartBadge.textContent = cartCount;
+      cartBadge.classList.toggle('visible', cartCount > 0);
+
+      const wishCount = CartStore.wishlistCount();
+      wishlistBadge.textContent = wishCount;
+      wishlistBadge.classList.toggle('visible', wishCount > 0);
+    }
+
+    cartNavBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const willOpen = cartPanel.classList.contains('hidden');
+      closePanels();
+      if (willOpen) {
+        renderCartPanel();
+        cartPanel.classList.remove('hidden');
+      }
+    });
+
+    wishlistNavBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const willOpen = wishlistPanel.classList.contains('hidden');
+      closePanels();
+      if (willOpen) {
+        renderWishlistPanel();
+        wishlistPanel.classList.remove('hidden');
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.nav-panel-wrap')) {
+        closePanels();
+      }
+    });
+
+    // Panel-level interactions (qty +/-, remove, move to cart)
+    cartPanelItems.addEventListener('click', (event) => {
+      const id = event.target.getAttribute('data-part-id');
+      if (!id) return;
+
+      if (event.target.classList.contains('cart-qty-increase')) {
+        const item = CartStore.getCart().find((entry) => entry.id === id);
+        CartStore.setCartQty(id, (item ? item.qty : 0) + 1);
+      } else if (event.target.classList.contains('cart-qty-decrease')) {
+        const item = CartStore.getCart().find((entry) => entry.id === id);
+        CartStore.setCartQty(id, (item ? item.qty : 1) - 1);
+      } else if (event.target.classList.contains('cart-remove-btn')) {
+        CartStore.removeFromCart(id);
+        showToast('Removed from cart');
+      } else {
+        return;
+      }
+
+      renderCartPanel();
+      updateBadges();
+      syncCardButtonStates();
+    });
+
+    wishlistPanelItems.addEventListener('click', (event) => {
+      const id = event.target.getAttribute('data-part-id');
+      if (!id) return;
+
+      if (event.target.classList.contains('wishlist-remove-btn')) {
+        CartStore.removeFromWishlist(id);
+        showToast('Removed from wishlist');
+      } else if (event.target.classList.contains('wishlist-move-btn')) {
+        const part = partIndex.get(String(id)) || CartStore.getWishlist().find((entry) => entry.id === id);
+        if (part) {
+          CartStore.addToCart(part, 1);
+          showToast(`${part.name} added to cart`);
+        }
+      } else {
+        return;
+      }
+
+      renderWishlistPanel();
+      renderCartPanel();
+      updateBadges();
+      syncCardButtonStates();
+    });
+
+    // Keep the "Add to cart" buttons on product cards in sync with panel actions
+    function syncCardButtonStates() {
+      document.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
+        const id = btn.getAttribute('data-part-id');
+        const inCart = CartStore.isInCart(id);
+        btn.disabled = inCart;
+        btn.textContent = inCart ? 'In cart' : 'Add to cart';
+      });
+      document.querySelectorAll('.wishlist-toggle').forEach((btn) => {
+        const id = btn.getAttribute('data-part-id');
+        btn.classList.toggle('active', CartStore.isInWishlist(id));
+      });
     }
 
     function clearSessionAndGoLogin(event) {
@@ -900,11 +1552,7 @@
       const welcomeMessage = document.getElementById('welcome-message');
       if (sessionUser) {
         dashboardNavLink.classList.remove('hidden');
-        authNavLink.textContent = 'Profile';
-        authNavLink.href = 'profile.html';
-        authNavLink.classList.add('profile-link');
-        authNavLink.title = `Open profile for ${sessionUser.name || sessionUser.email}`;
-        
+
         // Display welcome message with username
         const displayName = sessionUser.name || sessionUser.email.split('@')[0];
         welcomeMessage.textContent = `Welcome, ${displayName}!`;
@@ -912,14 +1560,18 @@
       }
     } catch (_error) {
       dashboardNavLink.classList.add('hidden');
-      authNavLink.textContent = 'Login';
-      authNavLink.href = 'login.html';
     }
 
-    loadHomepageContent().catch(() => {
-      renderPartCards(featuredGrid, featuredEmpty, [], 'View details');
-      renderPartCards(trendingGrid, trendingEmpty, [], 'View details');
-    });
+    updateBadges();
+
+    loadHomepageContent()
+      .then(() => {
+        syncCardButtonStates();
+      })
+      .catch(() => {
+        renderPartCards(featuredGrid, featuredEmpty, [], 'View details');
+        renderPartCards(trendingGrid, trendingEmpty, [], 'View details');
+      });
   </script>
 </body>
 </html>
