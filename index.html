@@ -493,7 +493,7 @@
 
     .hero {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1fr;
       gap: 24px;
       padding: 34px;
       margin-bottom: 22px;
@@ -746,7 +746,9 @@
       stroke: var(--accent);
     }
 
-    .listing-grid { grid-template-columns: repeat(3, 1fr); }
+    .listing-grid {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
     .feature-grid { grid-template-columns: repeat(4, 1fr); }
 
     .section {
@@ -927,11 +929,12 @@
           <div class="stat"><strong>Fast delivery</strong><span>Quick dispatch and secure checkout.</span></div>
         </div>
       </div>
-      <aside class="card sidebar">
-        <h2>Trending now</h2>
-        <div class="listing-grid" id="trending-grid"></div>
-        <div id="trending-empty" class="detail-card hidden" style="margin-top: 12px;">No trending products yet.</div>
-      </aside>
+    </section>
+
+    <section class="section" id="trending">
+      <h2>Trending now</h2>
+      <div class="listing-grid" id="trending-grid"></div>
+      <div id="trending-empty" class="detail-card hidden" style="margin-top: 12px;">No trending products yet.</div>
     </section>
 
     <section class="section" id="categories">
@@ -1085,7 +1088,20 @@
         try {
           const raw = localStorage.getItem(storageKey(kind));
           const parsed = raw ? JSON.parse(raw) : [];
-          return Array.isArray(parsed) ? parsed : [];
+          const list = Array.isArray(parsed) ? parsed : [];
+          // Self-heal entries saved before ids were normalized to strings,
+          // so old localStorage data doesn't silently fail to match.
+          let needsRewrite = false;
+          list.forEach((item) => {
+            if (item && typeof item.id !== 'string') {
+              item.id = String(item.id);
+              needsRewrite = true;
+            }
+          });
+          if (needsRewrite) {
+            write(kind, list);
+          }
+          return list;
         } catch (_e) {
           return [];
         }
@@ -1101,7 +1117,7 @@
 
       function partSnapshot(part) {
         return {
-          id: part.id,
+          id: String(part.id),
           name: part.name,
           price: part.price,
           description: part.description
@@ -1115,7 +1131,8 @@
 
       function addToCart(part, qty = 1) {
         const cart = getCart();
-        const existing = cart.find((item) => item.id === part.id);
+        const partId = String(part.id);
+        const existing = cart.find((item) => item.id === partId);
         if (existing) {
           existing.qty += qty;
         } else {
@@ -1126,11 +1143,12 @@
       }
 
       function setCartQty(id, qty) {
+        const targetId = String(id);
         let cart = getCart();
         if (qty <= 0) {
-          cart = cart.filter((item) => item.id !== id);
+          cart = cart.filter((item) => item.id !== targetId);
         } else {
-          const item = cart.find((entry) => entry.id === id);
+          const item = cart.find((entry) => entry.id === targetId);
           if (item) item.qty = qty;
         }
         write('cart', cart);
@@ -1138,13 +1156,15 @@
       }
 
       function removeFromCart(id) {
-        const cart = getCart().filter((item) => item.id !== id);
+        const targetId = String(id);
+        const cart = getCart().filter((item) => item.id !== targetId);
         write('cart', cart);
         return cart;
       }
 
       function isInCart(id) {
-        return getCart().some((item) => item.id === id);
+        const targetId = String(id);
+        return getCart().some((item) => item.id === targetId);
       }
 
       function cartCount() {
@@ -1161,13 +1181,15 @@
       }
 
       function isInWishlist(id) {
-        return getWishlist().some((item) => item.id === id);
+        const targetId = String(id);
+        return getWishlist().some((item) => item.id === targetId);
       }
 
       function toggleWishlist(part) {
+        const partId = String(part.id);
         let wishlist = getWishlist();
-        if (wishlist.some((item) => item.id === part.id)) {
-          wishlist = wishlist.filter((item) => item.id !== part.id);
+        if (wishlist.some((item) => item.id === partId)) {
+          wishlist = wishlist.filter((item) => item.id !== partId);
         } else {
           wishlist.push(partSnapshot(part));
         }
@@ -1176,7 +1198,8 @@
       }
 
       function removeFromWishlist(id) {
-        const wishlist = getWishlist().filter((item) => item.id !== id);
+        const targetId = String(id);
+        const wishlist = getWishlist().filter((item) => item.id !== targetId);
         write('wishlist', wishlist);
         return wishlist;
       }
