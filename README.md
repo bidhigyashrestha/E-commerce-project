@@ -11,8 +11,8 @@ npm start
 
 Then open:
 
-- `http://localhost:3000/login.html`
-- `http://localhost:3000/index.html`
+http://localhost:3000/login.html
+http://localhost:3000/index.html
 
 ## Seed accounts
 
@@ -20,8 +20,8 @@ Then open:
 - Admin password: `admin123`
 - User email: `user@gmail.com`
 - User password: `user123`
--user email: bidhigya@gmail.com
--password: bidhigya
+- user email: bidhigya@gmail.com
+- password: bidhigya
 
 ## Notes
 

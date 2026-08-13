@@ -50,6 +50,7 @@
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
 
     .brand-mark {
@@ -82,10 +83,158 @@
       fill: #121212;
     }
 
+    /* Search bar */
+    .navbar-search {
+      flex: 1;
+      max-width: 440px;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      padding: 8px 8px 8px 18px;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .navbar-search:focus-within {
+      border-color: rgba(255, 122, 24, 0.55);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .navbar-search input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.94rem;
+      font-family: inherit;
+      padding: 6px 0;
+      min-width: 0;
+    }
+
+    .navbar-search input::placeholder {
+      color: var(--muted);
+    }
+
+    .navbar-search button {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #1d1307;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 8px 18px rgba(255, 122, 24, 0.28);
+    }
+
+    .navbar-search button:hover {
+      filter: brightness(1.05);
+    }
+
+    .navbar-search button svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    /* Search suggestions dropdown */
+    .navbar-search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 440px;
+      min-width: 180px;
+    }
+
+    .navbar-search-wrap .navbar-search {
+      max-width: none;
+      width: 100%;
+    }
+
+    .search-suggestions {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+      z-index: 40;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .search-suggestions .suggestion-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .search-suggestions .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-suggestions .suggestion-item:hover,
+    .search-suggestions .suggestion-item.active {
+      background: rgba(255, 122, 24, 0.14);
+    }
+
+    .search-suggestions .suggestion-name {
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .search-suggestions .suggestion-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .search-suggestions .suggestion-price {
+      color: #ffd2ae;
+      font-weight: 800;
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+
+    .search-suggestions .suggestion-status {
+      padding: 14px 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .search-suggestions .suggestion-viewall {
+      display: block;
+      text-align: center;
+      padding: 12px 16px;
+      font-weight: 800;
+      color: #ffd2ae;
+      text-decoration: none;
+      background: rgba(255, 122, 24, 0.08);
+    }
+
+    .search-suggestions .suggestion-viewall:hover {
+      background: rgba(255, 122, 24, 0.16);
+    }
+
     .nav {
       display: flex;
       gap: 18px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .nav a, .ghost {
@@ -347,6 +496,14 @@
       .hero, .listing-grid, .feature-grid { grid-template-columns: 1fr; }
       .stats { grid-template-columns: 1fr; }
     }
+
+    @media (max-width: 760px) {
+      .navbar-search {
+        order: 3;
+        max-width: 100%;
+        flex-basis: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -384,6 +541,29 @@
         </div>
         GearShift Auto Parts
       </div>
+
+      <div class="navbar-search-wrap" id="navbar-search-wrap">
+        <form class="navbar-search" id="navbar-search-form" role="search" autocomplete="off">
+          <input
+            type="text"
+            id="navbar-search-input"
+            name="q"
+            placeholder="Search parts, brands, categories..."
+            autocomplete="off"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            role="combobox"
+          />
+          <button type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </form>
+        <div class="search-suggestions hidden" id="search-suggestions" role="listbox"></div>
+      </div>
+
       <nav class="nav">
         <a href="#categories" class="categories-link">Categories</a>
         <a href="dashboard.html" class="dashboard-link">Dashboard</a>
@@ -451,6 +631,10 @@
     const trendingEmpty = document.getElementById('trending-empty');
     const featuredGrid = document.getElementById('featured-grid');
     const featuredEmpty = document.getElementById('featured-empty');
+    const navbarSearchForm = document.getElementById('navbar-search-form');
+    const navbarSearchInput = document.getElementById('navbar-search-input');
+    const navbarSearchWrap = document.getElementById('navbar-search-wrap');
+    const searchSuggestions = document.getElementById('search-suggestions');
 
     const categoryCards = {
       'four-wheelers': [
@@ -571,6 +755,138 @@
       sessionStorage.removeItem('gearshift-session-user');
       window.location.href = 'login.html';
     }
+
+    // ---- Live search suggestions ----
+    let searchDebounceTimer = null;
+    let searchAbortController = null;
+    let activeSuggestionIndex = -1;
+    const SEARCH_DEBOUNCE_MS = 250;
+    const SEARCH_MIN_CHARS = 2;
+
+    function closeSuggestions() {
+      searchSuggestions.classList.add('hidden');
+      searchSuggestions.innerHTML = '';
+      navbarSearchInput.setAttribute('aria-expanded', 'false');
+      activeSuggestionIndex = -1;
+    }
+
+    function openSuggestions() {
+      searchSuggestions.classList.remove('hidden');
+      navbarSearchInput.setAttribute('aria-expanded', 'true');
+    }
+
+    function renderSuggestionStatus(message) {
+      searchSuggestions.innerHTML = `<div class="suggestion-status">${escapeHtml(message)}</div>`;
+      openSuggestions();
+    }
+
+    function renderSuggestions(query, results) {
+      if (!results.length) {
+        renderSuggestionStatus('No matching parts found.');
+        return;
+      }
+
+      const items = results.slice(0, 8).map((part) => `
+        <a href="product-details.html?part=${encodeURIComponent(part.id)}" class="suggestion-item" role="option">
+          <span>
+            <span class="suggestion-name">${escapeHtml(part.name)}</span><br />
+            <span class="suggestion-meta">${escapeHtml(part.category || part.brand || '')}</span>
+          </span>
+          ${part.price !== undefined ? `<span class="suggestion-price">${formatPrice(part.price)}</span>` : ''}
+        </a>
+      `).join('');
+
+      const viewAll = `<a href="search.html?q=${encodeURIComponent(query)}" class="suggestion-viewall">View all results for "${escapeHtml(query)}"</a>`;
+
+      searchSuggestions.innerHTML = items + viewAll;
+      activeSuggestionIndex = -1;
+      openSuggestions();
+    }
+
+    async function fetchSuggestions(query) {
+      if (searchAbortController) {
+        searchAbortController.abort();
+      }
+      searchAbortController = new AbortController();
+
+      try {
+        renderSuggestionStatus('Searching...');
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+          signal: searchAbortController.signal
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Search failed');
+        }
+
+        renderSuggestions(query, data.results || []);
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        renderSuggestionStatus('Unable to load suggestions right now.');
+      }
+    }
+
+    navbarSearchInput.addEventListener('input', (event) => {
+      const query = event.target.value.trim();
+
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+      if (query.length < SEARCH_MIN_CHARS) {
+        closeSuggestions();
+        return;
+      }
+
+      searchDebounceTimer = setTimeout(() => fetchSuggestions(query), SEARCH_DEBOUNCE_MS);
+    });
+
+    navbarSearchInput.addEventListener('focus', () => {
+      const query = navbarSearchInput.value.trim();
+      if (query.length >= SEARCH_MIN_CHARS && searchSuggestions.innerHTML) {
+        openSuggestions();
+      }
+    });
+
+    navbarSearchInput.addEventListener('keydown', (event) => {
+      const items = Array.from(searchSuggestions.querySelectorAll('.suggestion-item'));
+      if (!items.length || searchSuggestions.classList.contains('hidden')) return;
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        activeSuggestionIndex = (activeSuggestionIndex + 1) % items.length;
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        activeSuggestionIndex = (activeSuggestionIndex - 1 + items.length) % items.length;
+      } else if (event.key === 'Escape') {
+        closeSuggestions();
+        return;
+      } else if (event.key === 'Enter' && activeSuggestionIndex >= 0) {
+        event.preventDefault();
+        items[activeSuggestionIndex].click();
+        return;
+      } else {
+        return;
+      }
+
+      items.forEach((item, index) => item.classList.toggle('active', index === activeSuggestionIndex));
+      items[activeSuggestionIndex].scrollIntoView({ block: 'nearest' });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!navbarSearchWrap.contains(event.target)) {
+        closeSuggestions();
+      }
+    });
+
+    // Navbar search: submit sends the user to search.html?q=<term>
+    navbarSearchForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const query = navbarSearchInput.value.trim();
+      if (query) {
+        closeSuggestions();
+        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+      }
+    });
 
     logoutNavLink.addEventListener('click', clearSessionAndGoLogin);
     categoriesVehicleType.addEventListener('change', (event) => {
