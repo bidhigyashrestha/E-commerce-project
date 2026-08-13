@@ -483,6 +483,45 @@
       font-weight: 800;
     }
 
+    .checkout-btn {
+      font-size: 0.9rem;
+      padding: 12px 16px;
+    }
+
+    .checkout-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .checkout-error {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 88, 88, 0.12);
+      border: 1px solid rgba(255, 88, 88, 0.35);
+      color: #ffb4b4;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .panel-item.purchased {
+      opacity: 0.55;
+    }
+
+    .panel-item-status {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .panel-item-status.error {
+      color: #ffb4b4;
+    }
+
+    .panel-item-status.success {
+      color: #9be29b;
+    }
+
     .hero, .card, .section {
       border: 1px solid var(--panel-border);
       background: var(--panel);
@@ -904,13 +943,16 @@
               <span>Total</span>
               <span id="cart-total">$0.00</span>
             </div>
+            <div id="checkout-error" class="checkout-error hidden"></div>
+            <button type="button" class="button checkout-btn" id="checkout-btn" style="width: 100%; margin-top: 12px;">
+              Checkout
+            </button>
           </div>
         </div>
 
         <a href="#categories" class="categories-link">Categories</a>
 
         <a href="dashboard.html" class="dashboard-link">Dashboard</a>
-        <a id="dashboard-nav-link" href="dashboard.html" class="dashboard-link hidden">Dashboard</a>
         <a id="logout-nav-link" href="login.html" class="logout-link">Logout</a>
       </nav>
     </header>
@@ -967,7 +1009,6 @@
   <div id="toast-stack" aria-live="polite"></div>
 
   <script>
-    const dashboardNavLink = document.getElementById('dashboard-nav-link');
     const logoutNavLink = document.getElementById('logout-nav-link');
     const categoriesVehicleType = document.getElementById('categories-vehicle-type');
     const categoriesGrid = document.getElementById('categories-grid');
@@ -1376,6 +1417,8 @@
     const cartPanelEmpty = document.getElementById('cart-panel-empty');
     const cartTotalEl = document.getElementById('cart-total');
     const cartBadge = document.getElementById('cart-badge');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const checkoutErrorEl = document.getElementById('checkout-error');
 
     const wishlistNavBtn = document.getElementById('wishlist-nav-btn');
     const wishlistPanel = document.getElementById('wishlist-panel');
@@ -1390,13 +1433,18 @@
 
     function renderCartPanel() {
       const cart = CartStore.getCart();
+      checkoutErrorEl.classList.add('hidden');
+      checkoutErrorEl.textContent = '';
+
       if (!cart.length) {
         cartPanelItems.innerHTML = '';
         cartPanelEmpty.classList.remove('hidden');
+        checkoutBtn.classList.add('hidden');
       } else {
         cartPanelEmpty.classList.add('hidden');
+        checkoutBtn.classList.remove('hidden');
         cartPanelItems.innerHTML = cart.map((item) => `
-          <div class="panel-item">
+          <div class="panel-item" data-cart-item="${escapeHtml(item.id)}">
             <div class="panel-item-info">
               <div class="panel-item-name">${escapeHtml(item.name)}</div>
               <div class="panel-item-price">${formatPrice(item.price)}</div>
@@ -1405,6 +1453,7 @@
                 <span>${item.qty}</span>
                 <button type="button" class="cart-qty-increase" data-part-id="${escapeHtml(item.id)}">+</button>
               </div>
+              <div class="panel-item-status" data-status-for="${escapeHtml(item.id)}"></div>
             </div>
             <button type="button" class="panel-item-remove cart-remove-btn" data-part-id="${escapeHtml(item.id)}">Remove</button>
           </div>
@@ -1412,6 +1461,117 @@
       }
       cartTotalEl.textContent = formatPrice(CartStore.cartTotal());
     }
+
+    // ---- Checkout: purchases each cart item against the live backend ----
+    function getSessionUserForCheckout() {
+      try {
+        return JSON.parse(sessionStorage.getItem('gearshift-session-user') || 'null');
+      } catch (_e) {
+        return null;
+      }
+    }
+
+    function setItemStatus(id, message, kind) {
+      const el = cartPanelItems.querySelector(`[data-status-for="${CSS.escape(String(id))}"]`);
+      if (!el) return;
+      el.textContent = message;
+      el.className = `panel-item-status${kind ? ' ' + kind : ''}`;
+    }
+
+    async function purchaseCartItem(item, buyerEmail) {
+      const response = await fetch('/api/purchases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': buyerEmail
+        },
+        body: JSON.stringify({ partId: item.id, quantity: item.qty })
+      });
+
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (_e) {
+        /* non-JSON error response */
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || `Purchase failed (${response.status})`);
+      }
+
+      return data;
+    }
+
+    async function handleCheckout() {
+      const sessionUser = getSessionUserForCheckout();
+      if (!sessionUser || !sessionUser.email) {
+        checkoutErrorEl.textContent = 'Please log in to complete your purchase.';
+        checkoutErrorEl.classList.remove('hidden');
+        return;
+      }
+
+      const cart = CartStore.getCart();
+      if (!cart.length) return;
+
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = 'Processing...';
+      checkoutErrorEl.classList.add('hidden');
+      checkoutErrorEl.textContent = '';
+
+      let successCount = 0;
+      const failures = [];
+      let latestHomepage = null;
+
+      // Purchase sequentially so stock checks on the server stay accurate
+      // if the same part appears with a quantity larger than remaining stock.
+      for (const item of cart) {
+        setItemStatus(item.id, 'Processing...', '');
+        try {
+          const result = await purchaseCartItem(item, sessionUser.email);
+          if (result && result.homepage) {
+            latestHomepage = result.homepage;
+          }
+          setItemStatus(item.id, 'Purchased', 'success');
+          CartStore.removeFromCart(item.id);
+          successCount += 1;
+        } catch (error) {
+          setItemStatus(item.id, error.message || 'Failed', 'error');
+          failures.push(`${item.name}: ${error.message || 'purchase failed'}`);
+        }
+      }
+
+      checkoutBtn.disabled = false;
+      checkoutBtn.textContent = 'Checkout';
+
+      if (successCount > 0) {
+        showToast(successCount === 1 ? '1 item purchased' : `${successCount} items purchased`);
+      }
+
+      if (failures.length) {
+        checkoutErrorEl.textContent = failures.join(' · ');
+        checkoutErrorEl.classList.remove('hidden');
+      }
+
+      renderCartPanel();
+      updateBadges();
+      syncCardButtonStates();
+
+      // Refresh homepage listings so stock-driven changes (e.g. an item
+      // selling out) are reflected immediately. Use the freshest homepage
+      // payload the server already sent back with the last purchase when
+      // available, falling back to a direct fetch otherwise.
+      if (latestHomepage) {
+        renderPartCards(featuredGrid, featuredEmpty, latestHomepage.featuredParts || [], 'View details');
+        renderPartCards(trendingGrid, trendingEmpty, latestHomepage.trendingParts || [], 'View details');
+        syncCardButtonStates();
+      } else {
+        loadHomepageContent().then(syncCardButtonStates).catch(() => {});
+      }
+    }
+
+    checkoutBtn.addEventListener('click', handleCheckout);
+
+
 
     function renderWishlistPanel() {
       const wishlist = CartStore.getWishlist();
@@ -1680,15 +1840,13 @@
       const sessionUser = JSON.parse(sessionStorage.getItem('gearshift-session-user') || 'null');
       const welcomeMessage = document.getElementById('welcome-message');
       if (sessionUser) {
-        dashboardNavLink.classList.remove('hidden');
-
         // Display welcome message with username
         const displayName = sessionUser.name || sessionUser.email.split('@')[0];
         welcomeMessage.textContent = `Welcome, ${displayName}!`;
         welcomeMessage.style.display = 'inline-flex';
       }
     } catch (_error) {
-      dashboardNavLink.classList.add('hidden');
+      /* not logged in — welcome message stays hidden */
     }
 
     updateBadges();

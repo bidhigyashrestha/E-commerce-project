@@ -537,7 +537,6 @@
 
         activePartId = part.id;
 
-        detailEyebrow.textContent = 'Live product';
         detailTitle.textContent = part.name;
         detailCopy.textContent = part.description;
         detailName.textContent = part.name;
@@ -547,15 +546,14 @@
         detailOwner.textContent = `Owner: ${escapeHtml(part.owner_email || 'Unknown')}`;
         renderImagePanel(part);
         detailExtraList.innerHTML = [
+          renderExtraField('Part ID', `GS-${String(part.id).padStart(6, '0')}`),
           renderExtraField('Vehicle type', part.vehicle_type),
           renderExtraField('Brand', part.brand),
           renderExtraField('Compatible model', part.model),
           renderExtraField('Condition', part.condition),
           renderExtraField('Stock quantity', part.stock_quantity),
-          renderExtraField('Warranty', part.warranty),
-          renderExtraField('Part number', part.part_number)
+          renderExtraField('Warranty', part.warranty)
         ].join('');
-        detailStatus.textContent = `Product #${part.id}`;
         buyButton.disabled = false;
       })
       .catch((error) => {

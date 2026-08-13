@@ -529,15 +529,9 @@
                 <input id="part-stock-quantity" type="number" min="0" step="1" placeholder="10" required>
               </div>
             </div>
-            <div class="form-two-col">
-              <div>
-                <label for="part-part-number">Part number</label>
-                <input id="part-part-number" type="text" placeholder="BG-1024">
-              </div>
-              <div>
-                <label for="part-warranty">Warranty</label>
-                <input id="part-warranty" type="text" placeholder="6 months, 1 year">
-              </div>
+            <div>
+              <label for="part-warranty">Warranty</label>
+              <input id="part-warranty" type="text" placeholder="6 months, 1 year">
             </div>
             <div>
               <label for="part-name">Part name</label>
@@ -665,7 +659,6 @@
     const partImagePreview = document.getElementById('part-image-preview');
     const partCondition = document.getElementById('part-condition');
     const partStockQuantity = document.getElementById('part-stock-quantity');
-    const partPartNumber = document.getElementById('part-part-number');
     const partWarranty = document.getElementById('part-warranty');
     const partName = document.getElementById('part-name');
     const partPrice = document.getElementById('part-price');
@@ -727,7 +720,6 @@
       partImagePreview.innerHTML = 'No image selected';
       partCondition.value = '';
       partStockQuantity.value = '';
-      partPartNumber.value = '';
       partWarranty.value = '';
       partName.value = '';
       partPrice.value = '';
@@ -934,7 +926,6 @@
         imageName: imageFile ? imageFile.name : '',
         condition: partCondition.value,
         stockQuantity: partStockQuantity.value,
-        partNumber: partPartNumber.value.trim(),
         warranty: partWarranty.value.trim(),
         name: partName.value.trim(),
         price: partPrice.value,
@@ -984,7 +975,6 @@
         updateImagePreview(part.image_data || '', part.image_name || '');
         partCondition.value = part.condition || '';
         partStockQuantity.value = part.stock_quantity ?? '';
-        partPartNumber.value = part.part_number || '';
         partWarranty.value = part.warranty || '';
         partName.value = part.name;
         partPrice.value = part.price;
