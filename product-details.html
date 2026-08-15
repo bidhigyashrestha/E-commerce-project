@@ -276,6 +276,52 @@
       font-weight: 800;
     }
 
+    .seller-row {
+      margin-top: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      padding: 8px 10px 8px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .seller-row:hover {
+      background: rgba(255, 122, 24, 0.10);
+      border-color: rgba(255, 122, 24, 0.35);
+    }
+
+    .seller-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: rgba(255, 122, 24, 0.14);
+      border: 1px solid rgba(255, 122, 24, 0.35);
+      display: grid;
+      place-items: center;
+      color: #ffd2ae;
+      font-weight: 800;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    .seller-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .seller-name {
+      font-weight: 700;
+      color: var(--text);
+    }
+
     .status {
       margin-top: 16px;
       color: var(--muted);
@@ -371,7 +417,10 @@
           </div>
         </div>
           <div class="details-list" id="detail-extra-list"></div>
-        <div class="price" id="detail-owner">-</div>
+        <a class="seller-row" id="detail-seller" href="#" style="display: none;">
+          <span class="seller-avatar" id="detail-seller-avatar">?</span>
+          <span class="seller-name" id="detail-seller-name">Unknown seller</span>
+        </a>
         <div class="status" id="buy-status" aria-live="polite"></div>
         <div class="status" id="detail-status" aria-live="polite"></div>
       </aside>
@@ -388,7 +437,9 @@
     const detailUpdated = document.getElementById('detail-updated');
     const detailExtraList = document.getElementById('detail-extra-list');
     const detailImagePanel = document.getElementById('detail-image-panel');
-    const detailOwner = document.getElementById('detail-owner');
+    const detailSeller = document.getElementById('detail-seller');
+    const detailSellerAvatar = document.getElementById('detail-seller-avatar');
+    const detailSellerName = document.getElementById('detail-seller-name');
     const buyQuantity = document.getElementById('buy-quantity');
     const buyButton = document.getElementById('buy-button');
     const buyStatus = document.getElementById('buy-status');
@@ -421,6 +472,36 @@
           <strong>${escapeHtml(value || '-')}</strong>
         </div>
       `;
+    }
+
+    // Shows a small circular avatar + the seller's name, linking to their
+    // public profile. Looked up via the public-safe profile endpoint so we
+    // never expose the seller's raw email in the UI or the link itself.
+    async function renderSellerRow(ownerEmail) {
+      if (!ownerEmail) {
+        detailSeller.style.display = 'none';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/public/users/${encodeURIComponent(ownerEmail)}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Seller not found.');
+        }
+
+        const name = data.profile.name || 'GearShift seller';
+        detailSellerName.textContent = name;
+        if (data.profile.avatarData) {
+          detailSellerAvatar.innerHTML = `<img src="${data.profile.avatarData}" alt="${escapeHtml(name)}">`;
+        } else {
+          detailSellerAvatar.textContent = name.trim().charAt(0).toUpperCase() || '?';
+        }
+        detailSeller.href = `profile.html?email=${encodeURIComponent(ownerEmail)}`;
+        detailSeller.style.display = 'inline-flex';
+      } catch (_error) {
+        detailSeller.style.display = 'none';
+      }
     }
 
     function renderImagePanel(part) {
@@ -484,7 +565,7 @@
       detailPrice.textContent = '-';
       detailCategory.textContent = '-';
       detailUpdated.textContent = '-';
-      detailOwner.textContent = 'No live product available right now';
+      detailSeller.style.display = 'none';
       detailStatus.textContent = '';
       buyStatus.textContent = '';
       buyButton.disabled = true;
@@ -523,7 +604,6 @@
 
       setBuyStatus(`Purchased ${data.purchase.quantity} item(s) for ${formatPrice(data.purchase.totalPrice)}.`);
       if (data.part) {
-        detailOwner.textContent = `Owner: ${escapeHtml(data.part.owner_email || 'Unknown')}`;
         detailStatus.textContent = `Remaining stock: ${data.part.stock_quantity}`;
       }
     }
@@ -543,7 +623,7 @@
         detailPrice.textContent = formatPrice(part.price);
         detailCategory.textContent = inferCategory(part);
         detailUpdated.textContent = formatDate(part.updated_at || part.created_at);
-        detailOwner.textContent = `Owner: ${escapeHtml(part.owner_email || 'Unknown')}`;
+        renderSellerRow(part.owner_email);
         renderImagePanel(part);
         detailExtraList.innerHTML = [
           renderExtraField('Part ID', `GS-${String(part.id).padStart(6, '0')}`),

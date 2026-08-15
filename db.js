@@ -47,7 +47,9 @@ function sanitizeUser(user) {
     name: user.name,
     email: user.email,
     role: user.role || 'user',
-    createdAt: user.created_at
+    createdAt: user.created_at,
+    avatarData: user.avatar_data || '',
+    avatarName: user.avatar_name || ''
   };
 }
 
@@ -223,6 +225,8 @@ async function initializeDatabase() {
   `);
 
   ensureColumn('users', 'role', "TEXT NOT NULL DEFAULT 'user'");
+  ensureColumn('users', 'avatar_data', "TEXT NOT NULL DEFAULT ''");
+  ensureColumn('users', 'avatar_name', "TEXT NOT NULL DEFAULT ''");
   ensureColumn('parts', 'updated_at', "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP");
   ensureColumn('parts', 'vehicle_type', "TEXT NOT NULL DEFAULT ''");
   ensureColumn('parts', 'category', "TEXT NOT NULL DEFAULT ''");
@@ -241,17 +245,19 @@ async function initializeDatabase() {
   ensureColumn('purchases', 'unit_price', "REAL NOT NULL DEFAULT 0");
   ensureColumn('purchases', 'total_price', "REAL NOT NULL DEFAULT 0");
 
-  database.run('DELETE FROM users');
-  database.run("DELETE FROM sqlite_sequence WHERE name = 'users'");
-
-  createUser({
+  // Seed the two demo accounts only if they don't already exist. This used
+  // to unconditionally wipe the entire users table on every server start,
+  // which deleted every real registered account on each restart. Now it
+  // only ensures the demo accounts are present, and leaves everyone else's
+  // account untouched.
+  ensureSeedUser({
     name: 'GearShift User',
     email: 'user@gmail.com',
     password: 'user123',
     role: 'user'
   });
 
-  createUser({
+  ensureSeedUser({
     name: 'GearShift Admin',
     email: 'admin@gmail.com',
     password: 'admin123',
@@ -261,6 +267,16 @@ async function initializeDatabase() {
   persistDatabase();
 
   return database;
+}
+
+function ensureSeedUser({ name, email, password, role }) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const existing = getSingleRow('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
+  if (existing) {
+    return;
+  }
+
+  createUser({ name, email, password, role });
 }
 
 function persistDatabase() {
@@ -311,7 +327,10 @@ function createUser({ name, email, password, role = 'user' }) {
     hash
   ]);
 
-  const createdUser = getSingleRow('SELECT id, name, email, role, created_at FROM users WHERE email = ?', [normalizedEmail]);
+  const createdUser = getSingleRow(
+    'SELECT id, name, email, role, created_at, avatar_data, avatar_name FROM users WHERE email = ?',
+    [normalizedEmail]
+  );
 
   persistDatabase();
 
@@ -321,17 +340,13 @@ function createUser({ name, email, password, role = 'user' }) {
       name: trimmedName,
       email: normalizedEmail,
       role: normalizedRole,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      avatarData: '',
+      avatarName: ''
     };
   }
 
-  return sanitizeUser({
-    id: createdUser.id,
-    name: createdUser.name,
-    email: createdUser.email,
-    role: createdUser.role,
-    created_at: createdUser.created_at
-  });
+  return sanitizeUser(createdUser);
 }
 
 function authenticateUser({ email, password }) {
@@ -343,7 +358,7 @@ function authenticateUser({ email, password }) {
   }
 
   const user = getSingleRow(
-    'SELECT id, name, email, role, password_salt, password_hash, created_at FROM users WHERE email = ?',
+    'SELECT id, name, email, role, password_salt, password_hash, created_at, avatar_data, avatar_name FROM users WHERE email = ?',
     [normalizedEmail]
   );
 
@@ -361,6 +376,38 @@ function authenticateUser({ email, password }) {
   }
 
   return sanitizeUser(user);
+}
+
+// Simple "forgot password" reset: no email verification/token, since this
+// project has no email service. Anyone who knows an account's email can
+// reset that account's password. Fine for a demo/college project, but not
+// a secure pattern for a real product.
+function resetPassword(email, newPassword) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail) {
+    const error = new Error('Email is required.');
+    error.code = 'INVALID_EMAIL';
+    throw error;
+  }
+
+  if (!newPassword || String(newPassword).length < 6) {
+    const error = new Error('Password must be at least 6 characters.');
+    error.code = 'INVALID_PASSWORD';
+    throw error;
+  }
+
+  const user = getSingleRow('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
+  if (!user) {
+    const error = new Error('No account found with that email.');
+    error.code = 'NOT_FOUND';
+    throw error;
+  }
+
+  const { salt, hash } = hashPassword(String(newPassword));
+  database.run('UPDATE users SET password_salt = ?, password_hash = ? WHERE email = ?', [salt, hash, normalizedEmail]);
+  persistDatabase();
+
+  return true;
 }
 
 function listParts(currentUser) {
@@ -600,13 +647,56 @@ function getUserByEmail(email) {
     return null;
   }
 
-  return getSingleRow('SELECT id, name, email, role, created_at FROM users WHERE email = ?', [normalizedEmail]);
+  return getSingleRow(
+    'SELECT id, name, email, role, created_at, avatar_data, avatar_name FROM users WHERE email = ?',
+    [normalizedEmail]
+  );
+}
+
+function updateUserAvatar(currentUser, avatarData, avatarName) {
+  const normalizedAvatarData = String(avatarData || '').trim();
+  const trimmedAvatarName = String(avatarName || '').trim();
+
+  database.run('UPDATE users SET avatar_data = ?, avatar_name = ? WHERE email = ?', [
+    normalizedAvatarData,
+    trimmedAvatarName,
+    currentUser.email
+  ]);
+  persistDatabase();
+
+  const updated = getSingleRow(
+    'SELECT id, name, email, role, created_at, avatar_data, avatar_name FROM users WHERE email = ?',
+    [currentUser.email]
+  );
+
+  return sanitizeUser(updated);
+}
+
+// Public-safe profile lookup: only what's safe to show a stranger
+// (name + avatar) -- never email, role, or account creation date.
+function getPublicUserProfile(email) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const user = getSingleRow('SELECT name, avatar_data, avatar_name FROM users WHERE email = ?', [normalizedEmail]);
+  if (!user) {
+    return null;
+  }
+
+  return {
+    name: user.name,
+    avatarData: user.avatar_data || '',
+    avatarName: user.avatar_name || ''
+  };
 }
 
 module.exports = {
   initializeDatabase,
   createUser,
   authenticateUser,
+  resetPassword,
   listParts,
   listPublicParts,
   getPartById,
@@ -616,6 +706,8 @@ module.exports = {
   purchasePart,
   listPurchases,
   getUserByEmail,
+  updateUserAvatar,
+  getPublicUserProfile,
   getHomepageSpotlightPartId,
   setHomepageSpotlightPartId,
   getHomepageFeaturedPartId,

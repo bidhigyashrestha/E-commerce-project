@@ -605,13 +605,13 @@
 						<input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
 					</div>
 
-					<div class="form-group">
-						<label for="password">Password</label>
+					<div class="form-group" id="password-group">
+						<label for="password" id="password-label">Password</label>
 						<input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
 					</div>
 
 					<div class="form-group hidden" id="confirm-group">
-						<label for="confirm-password">Confirm password</label>
+						<label for="confirm-password" id="confirm-password-label">Confirm password</label>
 						<input id="confirm-password" name="confirm-password" type="password" placeholder="Re-enter your password" autocomplete="new-password">
 					</div>
 
@@ -620,7 +620,7 @@
 							<input type="checkbox" name="remember">
 							Remember me
 						</label>
-						<label class="remember">
+						<label class="remember" id="marketing-row">
 							<input type="checkbox" name="marketing" id="marketing" class="hidden">
 							<span id="marketing-copy">I agree to receive order updates and occasional parts deals.</span>
 						</label>
@@ -630,9 +630,9 @@
 					<button class="button" id="submit-button" type="submit">Sign In</button>
 				</form>
 
-				<div class="divider">or continue with</div>
+				<div class="divider" id="social-divider">or continue with</div>
 
-				<div class="secondary-actions">
+				<div class="secondary-actions" id="social-actions">
 					<button class="ghost-button" type="button" id="google-login">Google</button>
 					<button class="ghost-button" type="button" id="apple-login">Apple ID</button>
 				</div>
@@ -658,15 +658,20 @@
 		const nameGroup = document.getElementById('name-group');
 		const confirmGroup = document.getElementById('confirm-group');
 		const rememberWrap = document.getElementById('remember-wrap');
+		const marketingRow = document.getElementById('marketing-row');
 		const forgotLink = document.getElementById('forgot-link');
 		const marketing = document.getElementById('marketing');
 		const marketingCopy = document.getElementById('marketing-copy');
 		const googleLogin = document.getElementById('google-login');
 		const appleLogin = document.getElementById('apple-login');
+		const socialDivider = document.getElementById('social-divider');
+		const socialActions = document.getElementById('social-actions');
 		const email = document.getElementById('email');
 		const password = document.getElementById('password');
+		const passwordLabel = document.getElementById('password-label');
 		const nameInput = document.getElementById('name');
 		const confirmPassword = document.getElementById('confirm-password');
+		const confirmPasswordLabel = document.getElementById('confirm-password-label');
 
 		let mode = 'login';
 
@@ -678,26 +683,53 @@
 		function setMode(nextMode) {
 			mode = nextMode;
 			const isSignup = mode === 'signup';
+			const isReset = mode === 'reset';
 
-			title.textContent = isSignup ? 'Create your account' : 'Welcome back';
-			copy.textContent = isSignup
-				? 'Create a GearShift account to save vehicles, track parts, and speed up future orders.'
-				: 'Use your store account to continue shopping for parts, accessories, and service essentials.';
-			submitButton.textContent = isSignup ? 'Create Account' : 'Sign In';
-			toggleMode.textContent = isSignup ? 'Sign in instead' : 'Create an account';
-			modePrompt.textContent = isSignup ? 'Already have an account?' : 'New to GearShift?';
+			if (isReset) {
+				title.textContent = 'Reset your password';
+				copy.textContent = 'Enter your account email and a new password. This demo does not send a reset email -- it updates the password directly.';
+				submitButton.textContent = 'Reset password';
+				passwordLabel.textContent = 'New password';
+				password.placeholder = 'Enter your new password';
+				confirmPasswordLabel.textContent = 'Confirm new password';
+				confirmPassword.placeholder = 'Re-enter your new password';
+			} else {
+				title.textContent = isSignup ? 'Create your account' : 'Welcome back';
+				copy.textContent = isSignup
+					? 'Create a GearShift account to save vehicles, track parts, and speed up future orders.'
+					: 'Use your store account to continue shopping for parts, accessories, and service essentials.';
+				submitButton.textContent = isSignup ? 'Create Account' : 'Sign In';
+				passwordLabel.textContent = 'Password';
+				password.placeholder = 'Enter your password';
+				confirmPasswordLabel.textContent = 'Confirm password';
+				confirmPassword.placeholder = 'Re-enter your password';
+			}
+
+			toggleMode.textContent = isReset ? 'Sign in instead' : (isSignup ? 'Sign in instead' : 'Create an account');
+			modePrompt.textContent = isReset ? 'Remembered your password?' : (isSignup ? 'Already have an account?' : 'New to GearShift?');
+
 			nameGroup.classList.toggle('hidden', !isSignup);
-			confirmGroup.classList.toggle('hidden', !isSignup);
-			rememberWrap.classList.toggle('hidden', isSignup);
-			forgotLink.classList.toggle('hidden', isSignup);
+			confirmGroup.classList.toggle('hidden', !(isSignup || isReset));
+			rememberWrap.classList.toggle('hidden', isSignup || isReset);
+			marketingRow.classList.toggle('hidden', isReset);
+			forgotLink.classList.toggle('hidden', isSignup || isReset);
+			socialDivider.classList.toggle('hidden', isReset);
+			socialActions.classList.toggle('hidden', isReset);
+
 			marketingCopy.textContent = isSignup
 				? 'I agree to receive order updates, account emails, and occasional parts deals.'
 				: 'Remember this device for faster sign-in next time.';
 			marketing.checked = isSignup;
 			setMessage('');
 			form.reset();
+
 			if (isSignup) {
 				nameInput.required = true;
+				confirmPassword.required = true;
+				password.autocomplete = 'new-password';
+				confirmPassword.autocomplete = 'new-password';
+			} else if (isReset) {
+				nameInput.required = false;
 				confirmPassword.required = true;
 				password.autocomplete = 'new-password';
 				confirmPassword.autocomplete = 'new-password';
@@ -710,6 +742,10 @@
 		}
 
 		toggleMode.addEventListener('click', () => {
+			if (mode === 'reset') {
+				setMode('login');
+				return;
+			}
 			setMode(mode === 'login' ? 'signup' : 'login');
 		});
 
@@ -739,6 +775,26 @@
 			return data.user;
 		}
 
+		async function submitPasswordReset() {
+			if (location.protocol === 'file:') {
+				setMessage('Open this page through the Node server so password reset can work.', true);
+				return null;
+			}
+
+			const response = await fetch('/api/reset-password', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: email.value.trim(), newPassword: password.value })
+			});
+
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.error || 'Unable to reset password.');
+			}
+
+			return data;
+		}
+
 		function handleSocialLogin(provider) {
 			setMessage(`${provider} sign-in is not connected in this database demo yet.`, true);
 		}
@@ -748,11 +804,48 @@
 
 		forgotLink.addEventListener('click', (event) => {
 			event.preventDefault();
-			setMessage('Password reset is not connected yet on this demo page.', true);
+			setMode('reset');
+			email.focus();
 		});
 
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
+
+			if (mode === 'reset') {
+				if (!email.value.trim()) {
+					setMessage('Enter the email for your account.', true);
+					email.focus();
+					return;
+				}
+
+				if (password.value.length < 6) {
+					setMessage('Use a password with at least 6 characters.', true);
+					password.focus();
+					return;
+				}
+
+				if (password.value !== confirmPassword.value) {
+					setMessage('Passwords do not match.', true);
+					confirmPassword.focus();
+					return;
+				}
+
+				try {
+					const result = await submitPasswordReset();
+					if (!result) {
+						return;
+					}
+
+					const resetEmail = email.value.trim();
+					setMode('login');
+					setMessage('Password updated. You can now sign in.');
+					email.value = resetEmail;
+					password.focus();
+				} catch (error) {
+					setMessage(error.message, true);
+				}
+				return;
+			}
 
 			if (mode === 'signup') {
 				if (!nameInput.value.trim()) {

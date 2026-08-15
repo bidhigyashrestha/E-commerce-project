@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   authenticateUser,
+  resetPassword,
   createUser,
   initializeDatabase,
   getUserByEmail,
@@ -12,6 +13,8 @@ const {
   deletePart,
   purchasePart,
   listPurchases,
+  updateUserAvatar,
+  getPublicUserProfile,
   getHomepageSpotlightPartId,
   setHomepageSpotlightPartId,
   getHomepageFeaturedPartId,
@@ -81,6 +84,16 @@ app.post('/api/login', (req, res) => {
   }
 });
 
+app.post('/api/reset-password', (req, res) => {
+  try {
+    resetPassword((req.body && req.body.email) || '', (req.body && req.body.newPassword) || '');
+    res.json({ ok: true });
+  } catch (error) {
+    const status = error.code === 'NOT_FOUND' ? 404 : 400;
+    res.status(status).json({ error: error.message });
+  }
+});
+
 app.get('/api/me', (req, res) => {
   const user = resolveRequestUser(req);
   if (!user) {
@@ -89,6 +102,34 @@ app.get('/api/me', (req, res) => {
   }
 
   res.json({ user });
+});
+
+app.put('/api/me/avatar', (req, res) => {
+  const user = resolveRequestUser(req);
+  if (!user) {
+    res.status(401).json({ error: 'Not logged in.' });
+    return;
+  }
+
+  try {
+    const updatedUser = updateUserAvatar(user, req.body && req.body.avatarData, req.body && req.body.avatarName);
+    res.json({ user: updatedUser });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Public-safe profile lookup for any user by email -- used for showing a
+// seller's name + picture on a product page without exposing their email,
+// role, or account creation date to other visitors.
+app.get('/api/public/users/:email', (req, res) => {
+  const profile = getPublicUserProfile(req.params.email);
+  if (!profile) {
+    res.status(404).json({ error: 'User not found.' });
+    return;
+  }
+
+  res.json({ profile });
 });
 
 app.get('/api/parts', (req, res) => {

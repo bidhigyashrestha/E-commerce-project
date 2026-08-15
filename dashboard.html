@@ -731,7 +731,7 @@
     }
 
     function summarizePart(part) {
-      return `#${part.id} ${part.name} - ${formatPrice(part.price)}`;
+      return `GS-${String(part.id).padStart(6, '0')} ${part.name} - ${formatPrice(part.price)}`;
     }
 
     function updateImagePreview(dataUrl, fileName) {
@@ -883,7 +883,7 @@
           <tr>
             <td>
               <strong>${escapeHtml(part.name)}</strong><br>
-              <small>#${part.id}</small>
+              <small>GS-${String(part.id).padStart(6, '0')}</small>
             </td>
             <td>${escapeHtml(part.description)}</td>
             <td>${formatPrice(part.price)}</td>
@@ -984,7 +984,7 @@
           ? 'Update any listing in the marketplace.'
           : 'Update your own product listing.';
         saveButton.textContent = 'Update part';
-        setStatus(`Editing part #${part.id}.`);
+        setStatus(`Editing part GS-${String(part.id).padStart(6, '0')}.`);
       }
 
       if (action === 'delete') {

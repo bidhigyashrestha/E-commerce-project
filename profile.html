@@ -200,6 +200,63 @@
       display: none !important;
     }
 
+    .avatar-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .avatar-circle {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: rgba(255, 122, 24, 0.14);
+      border: 1px solid rgba(255, 122, 24, 0.35);
+      display: grid;
+      place-items: center;
+      color: #ffd2ae;
+      font-weight: 800;
+      font-size: 1.6rem;
+      text-transform: uppercase;
+    }
+
+    .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-upload {
+      margin-top: 18px;
+    }
+
+    .avatar-upload input[type="file"] {
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      border-radius: 14px;
+      font: inherit;
+      cursor: pointer;
+      color-scheme: dark;
+      width: 100%;
+    }
+
+    .avatar-upload input[type="file"]::file-selector-button {
+      margin-right: 12px;
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 122, 24, 0.35);
+      border-radius: 10px;
+      background: rgba(255, 122, 24, 0.14);
+      color: #ffd9b8;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     @media (max-width: 900px) {
       .hero {
         grid-template-columns: 1fr;
@@ -245,9 +302,9 @@
 
     <section class="shell hero">
       <div>
-        <div class="eyebrow">Profile</div>
-        <h1>Your account details</h1>
-        <p>These details come from the signed-in session. If no user is logged in, you can return to the login page.</p>
+        <div class="eyebrow" id="page-eyebrow">Profile</div>
+        <h1 id="page-title">Your account details</h1>
+        <p id="page-copy">These details come from the signed-in session. If no user is logged in, you can return to the login page.</p>
 
         <div id="profile-missing" class="card hidden" style="margin-top: 22px;">
           <strong style="display:block; margin-bottom: 8px; font-size: 1.1rem;">No user session found</strong>
@@ -256,38 +313,83 @@
             <a class="button" href="login.html">Go to login</a>
           </div>
         </div>
+
+        <div id="public-not-found" class="card hidden" style="margin-top: 22px;">
+          <strong style="display:block; margin-bottom: 8px; font-size: 1.1rem;">Seller not found</strong>
+          <p>We couldn't find a profile for that seller.</p>
+          <div class="actions">
+            <a class="button secondary" href="index.html">Back to home</a>
+          </div>
+        </div>
       </div>
 
       <aside class="card" id="profile-card">
-        <div class="field">
-          <label>Name</label>
-          <strong id="profile-name">-</strong>
+        <div class="avatar-row">
+          <div class="avatar-circle" id="avatar-circle">?</div>
+          <div>
+            <div class="field" style="margin-top: 0;">
+              <label>Name</label>
+              <strong id="profile-name">-</strong>
+            </div>
+          </div>
         </div>
-        <div class="field">
+
+        <div class="field" id="email-field">
           <label>Email</label>
           <strong id="profile-email">-</strong>
         </div>
-        <div class="field">
+        <div class="field" id="created-field">
           <label>Created</label>
           <strong id="profile-created">-</strong>
         </div>
-        <div class="actions">
+
+        <div class="avatar-upload hidden" id="avatar-upload-section">
+          <label for="avatar-file">Update your profile picture</label>
+          <input id="avatar-file" type="file" accept="image/*">
+        </div>
+
+        <div class="actions" id="own-profile-actions">
           <a class="button secondary" href="index.html">Back to home</a>
           <button class="button" id="logout-button" type="button">Log out</button>
         </div>
+
+        <div class="actions hidden" id="public-profile-actions">
+          <a class="button secondary" href="index.html">Back to home</a>
+        </div>
+
         <div id="profile-status" class="status" aria-live="polite"></div>
       </aside>
     </section>
   </main>
 
   <script>
+    const pageEyebrow = document.getElementById('page-eyebrow');
+    const pageTitle = document.getElementById('page-title');
+    const pageCopy = document.getElementById('page-copy');
     const profileCard = document.getElementById('profile-card');
     const profileMissing = document.getElementById('profile-missing');
+    const publicNotFound = document.getElementById('public-not-found');
     const profileName = document.getElementById('profile-name');
     const profileEmail = document.getElementById('profile-email');
     const profileCreated = document.getElementById('profile-created');
+    const emailField = document.getElementById('email-field');
+    const createdField = document.getElementById('created-field');
+    const avatarCircle = document.getElementById('avatar-circle');
+    const avatarUploadSection = document.getElementById('avatar-upload-section');
+    const avatarFile = document.getElementById('avatar-file');
+    const ownProfileActions = document.getElementById('own-profile-actions');
+    const publicProfileActions = document.getElementById('public-profile-actions');
     const logoutButton = document.getElementById('logout-button');
     const profileStatus = document.getElementById('profile-status');
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
 
     function setStatus(text, isError = false) {
       profileStatus.textContent = text;
@@ -307,19 +409,113 @@
       return date.toLocaleString();
     }
 
-    try {
-      const sessionUser = JSON.parse(sessionStorage.getItem('gearshift-session-user') || 'null');
+    function renderAvatar(name, avatarData) {
+      if (avatarData) {
+        avatarCircle.innerHTML = `<img src="${avatarData}" alt="${escapeHtml(name || 'Profile picture')}">`;
+        return;
+      }
+
+      const initial = (name || '?').trim().charAt(0) || '?';
+      avatarCircle.textContent = initial;
+    }
+
+    function readImageAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Unable to read the selected image.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function getSessionUser() {
+      try {
+        return JSON.parse(sessionStorage.getItem('gearshift-session-user') || 'null');
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    async function loadPublicProfile(email) {
+      pageEyebrow.textContent = 'Seller profile';
+      pageTitle.textContent = 'Seller profile';
+      pageCopy.textContent = 'Public marketplace profile.';
+      emailField.classList.add('hidden');
+      createdField.classList.add('hidden');
+      avatarUploadSection.classList.add('hidden');
+      ownProfileActions.classList.add('hidden');
+      publicProfileActions.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`/api/public/users/${encodeURIComponent(email)}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Seller not found.');
+        }
+
+        profileName.textContent = data.profile.name || 'GearShift seller';
+        renderAvatar(data.profile.name, data.profile.avatarData);
+      } catch (error) {
+        profileCard.classList.add('hidden');
+        publicNotFound.classList.remove('hidden');
+      }
+    }
+
+    function loadOwnProfile() {
+      const sessionUser = getSessionUser();
       if (!sessionUser) {
         profileCard.classList.add('hidden');
         profileMissing.classList.remove('hidden');
-      } else {
-        profileName.textContent = sessionUser.name || 'Guest';
-        profileEmail.textContent = sessionUser.email || '-';
-        profileCreated.textContent = formatDate(sessionUser.createdAt);
+        return;
       }
-    } catch (_error) {
-      profileCard.classList.add('hidden');
-      profileMissing.classList.remove('hidden');
+
+      profileName.textContent = sessionUser.name || 'Guest';
+      profileEmail.textContent = sessionUser.email || '-';
+      profileCreated.textContent = formatDate(sessionUser.createdAt);
+      renderAvatar(sessionUser.name, sessionUser.avatarData);
+      avatarUploadSection.classList.remove('hidden');
+
+      avatarFile.addEventListener('change', async () => {
+        const file = avatarFile.files && avatarFile.files[0] ? avatarFile.files[0] : null;
+        if (!file) {
+          return;
+        }
+
+        try {
+          const dataUrl = await readImageAsDataUrl(file);
+          renderAvatar(sessionUser.name, dataUrl);
+          setStatus('Uploading profile picture...');
+
+          const response = await fetch('/api/me/avatar', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Email': sessionUser.email
+            },
+            body: JSON.stringify({ avatarData: dataUrl, avatarName: file.name })
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Unable to update profile picture.');
+          }
+
+          sessionUser.avatarData = data.user.avatarData;
+          sessionUser.avatarName = data.user.avatarName;
+          sessionStorage.setItem('gearshift-session-user', JSON.stringify(sessionUser));
+          setStatus('Profile picture updated.');
+        } catch (error) {
+          setStatus(error.message, true);
+        }
+      });
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const publicEmail = params.get('email');
+
+    if (publicEmail) {
+      loadPublicProfile(publicEmail);
+    } else {
+      loadOwnProfile();
     }
 
     logoutButton.addEventListener('click', () => {
