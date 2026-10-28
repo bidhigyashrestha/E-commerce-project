@@ -21,7 +21,7 @@ http://localhost:3000/index.html
 - User email: `user@gmail.com`
 - User password: `user123`
 - user email: bidhigya@gmail.com
-- password: bidhigya
+- password: 123456
 
 ## Notes
 

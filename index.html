@@ -941,7 +941,7 @@
             <div class="nav-panel-empty hidden" id="cart-panel-empty">Your cart is empty.</div>
             <div class="nav-panel-footer">
               <span>Total</span>
-              <span id="cart-total">$0.00</span>
+              <span id="cart-total">Rs. 0.00</span>
             </div>
             <div id="checkout-error" class="checkout-error hidden"></div>
             <button type="button" class="button checkout-btn" id="checkout-btn" style="width: 100%; margin-top: 12px;">
@@ -977,6 +977,13 @@
       <h2>Trending now</h2>
       <div class="listing-grid" id="trending-grid"></div>
       <div id="trending-empty" class="detail-card hidden" style="margin-top: 12px;">No trending products yet.</div>
+    </section>
+
+    <section class="section" id="for-you">
+      <h2>For you</h2>
+      <p id="for-you-note" style="margin-bottom: 14px;"></p>
+      <div class="listing-grid" id="for-you-grid"></div>
+      <div id="for-you-empty" class="detail-card hidden" style="margin-top: 12px;">Nothing to recommend yet. Check back once more parts are listed.</div>
     </section>
 
     <section class="section" id="categories">
@@ -1017,6 +1024,9 @@
     const trendingEmpty = document.getElementById('trending-empty');
     const featuredGrid = document.getElementById('featured-grid');
     const featuredEmpty = document.getElementById('featured-empty');
+    const forYouGrid = document.getElementById('for-you-grid');
+    const forYouEmpty = document.getElementById('for-you-empty');
+    const forYouNote = document.getElementById('for-you-note');
     const navbarSearchForm = document.getElementById('navbar-search-form');
     const navbarSearchInput = document.getElementById('navbar-search-input');
     const navbarSearchWrap = document.getElementById('navbar-search-wrap');
@@ -1101,7 +1111,7 @@
 
     function formatPrice(price) {
       const numeric = Number(price);
-      return Number.isFinite(numeric) ? `$${numeric.toFixed(2)}` : String(price);
+      return Number.isFinite(numeric) ? `Rs. ${numeric.toFixed(2)}` : String(price);
     }
 
     /* ============================================================
@@ -1377,6 +1387,25 @@
       renderPartCards(trendingGrid, trendingEmpty, data.trendingParts || [], 'View details');
     }
 
+    // "For you" section: personalised picks from the server. Guests and buyers
+    // with no purchase history see the newest in-stock parts instead.
+    async function loadForYou() {
+      const sessionUser = getSessionUserForCheckout();
+      const headers = sessionUser && sessionUser.email ? { 'x-user-email': sessionUser.email } : {};
+
+      const response = await fetch('/api/for-you', { headers });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to load recommendations.');
+      }
+
+      forYouNote.textContent = data.personalized
+        ? 'All parts, with ones similar to what you have bought before shown first.'
+        : 'Every part in the catalog, newest first.';
+      renderPartCards(forYouGrid, forYouEmpty, data.parts || [], 'View details');
+    }
+
     // ---- Add to cart / wishlist click handling (event delegation) ----
     document.addEventListener('click', (event) => {
       const cartBtn = event.target.closest('.add-to-cart-btn');
@@ -1567,6 +1596,10 @@
       } else {
         loadHomepageContent().then(syncCardButtonStates).catch(() => {});
       }
+
+      if (successCount > 0) {
+        loadForYou().then(syncCardButtonStates).catch(() => {});
+      }
     }
 
     checkoutBtn.addEventListener('click', handleCheckout);
@@ -1625,8 +1658,18 @@
       }
     });
 
+    // FIX: previously this listener closed the cart/wishlist panel any time a
+    // click landed outside `.nav-panel-wrap` — including clicks on the
+    // "Add to cart" and wishlist-heart buttons on product cards, which live
+    // outside that wrapper. That meant clicking "Add to cart" while the cart
+    // panel was open immediately closed it again. Now we also skip closing
+    // when the click was on one of those action buttons.
     document.addEventListener('click', (event) => {
-      if (!event.target.closest('.nav-panel-wrap')) {
+      const clickedInsidePanel = event.target.closest('.nav-panel-wrap');
+      const clickedCartOrWishlistAction =
+        event.target.closest('.add-to-cart-btn') || event.target.closest('.wishlist-toggle');
+
+      if (!clickedInsidePanel && !clickedCartOrWishlistAction) {
         closePanels();
       }
     });
@@ -1635,6 +1678,15 @@
     cartPanelItems.addEventListener('click', (event) => {
       const id = event.target.getAttribute('data-part-id');
       if (!id) return;
+
+      // Stop this click from bubbling to the document-level "click outside
+      // closes panel" listener. renderCartPanel() below replaces this
+      // container's innerHTML, which detaches the clicked button from the
+      // DOM while the event is still bubbling — once detached,
+      // event.target.closest('.nav-panel-wrap') can no longer find this
+      // panel, so that listener would wrongly treat this as an outside
+      // click and close the panel.
+      event.stopPropagation();
 
       if (event.target.classList.contains('cart-qty-increase')) {
         const item = CartStore.getCart().find((entry) => entry.id === id);
@@ -1657,6 +1709,12 @@
     wishlistPanelItems.addEventListener('click', (event) => {
       const id = event.target.getAttribute('data-part-id');
       if (!id) return;
+
+      // Same reasoning as the cart panel listener above: renderWishlistPanel()
+      // replaces this container's contents, which would detach the clicked
+      // button before the click finishes bubbling to document — stop it here
+      // so the outside-click-closes-panel listener never sees it.
+      event.stopPropagation();
 
       if (event.target.classList.contains('wishlist-remove-btn')) {
         CartStore.removeFromWishlist(id);
@@ -1858,6 +1916,12 @@
       .catch(() => {
         renderPartCards(featuredGrid, featuredEmpty, [], 'View details');
         renderPartCards(trendingGrid, trendingEmpty, [], 'View details');
+      });
+
+    loadForYou()
+      .then(syncCardButtonStates)
+      .catch(() => {
+        renderPartCards(forYouGrid, forYouEmpty, [], 'View details');
       });
   </script>
 </body>

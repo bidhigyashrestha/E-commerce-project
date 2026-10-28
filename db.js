@@ -6,6 +6,10 @@ const initSqlJs = require('sql.js');
 const databasePath = path.join(__dirname, 'gearshift.db');
 const wasmDirectory = path.dirname(require.resolve('sql.js/dist/sql-wasm.wasm'));
 
+// Allowed order lifecycle values. Kept here (rather than only in the
+// frontend) so validation in updatePurchaseStatus stays authoritative.
+const ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+
 let SQL;
 let database;
 
@@ -104,6 +108,7 @@ function normalizePurchaseRecord(purchase) {
     quantity: purchase.quantity,
     unit_price: purchase.unit_price,
     total_price: purchase.total_price,
+    status: purchase.status || 'pending',
     created_at: purchase.created_at
   };
 }
@@ -130,22 +135,6 @@ function setSetting(key, value) {
     [normalizedKey, String(value)]
   );
   persistDatabase();
-}
-
-function getHomepageSpotlightPartId() {
-  const value = getSetting('homepage_spotlight_part_id');
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null;
-}
-
-function setHomepageSpotlightPartId(partId) {
-  const numericValue = Number(partId);
-  if (!Number.isFinite(numericValue) || numericValue <= 0) {
-    setSetting('homepage_spotlight_part_id', null);
-    return;
-  }
-
-  setSetting('homepage_spotlight_part_id', numericValue);
 }
 
 function getHomepageFeaturedPartId() {
@@ -244,6 +233,9 @@ async function initializeDatabase() {
   ensureColumn('purchases', 'quantity', "INTEGER NOT NULL DEFAULT 1");
   ensureColumn('purchases', 'unit_price', "REAL NOT NULL DEFAULT 0");
   ensureColumn('purchases', 'total_price', "REAL NOT NULL DEFAULT 0");
+  // Order lifecycle status, added so admins can track and update orders.
+  // Existing rows created before this column existed default to 'pending'.
+  ensureColumn('purchases', 'status', "TEXT NOT NULL DEFAULT 'pending'");
 
   // Seed the two demo accounts only if they don't already exist. This used
   // to unconditionally wipe the entire users table on every server start,
@@ -566,9 +558,6 @@ function deletePart(currentUser, id) {
   }
 
   database.run('DELETE FROM parts WHERE id = ?', [id]);
-  if (getHomepageSpotlightPartId() === Number(id)) {
-    setHomepageSpotlightPartId(null);
-  }
   if (getHomepageFeaturedPartId() === Number(id)) {
     setHomepageFeaturedPartId(null);
   }
@@ -635,10 +624,84 @@ function purchasePart(currentUser, id, quantity = 1) {
 function listPurchases(currentUser) {
   const isAdmin = currentUser && currentUser.role === 'admin';
   const rows = isAdmin
-    ? getAllRows('SELECT id, part_id, part_name, buyer_email, quantity, unit_price, total_price, created_at FROM purchases ORDER BY id DESC')
-    : getAllRows('SELECT id, part_id, part_name, buyer_email, quantity, unit_price, total_price, created_at FROM purchases WHERE buyer_email = ? ORDER BY id DESC', [currentUser.email]);
+    ? getAllRows('SELECT id, part_id, part_name, buyer_email, quantity, unit_price, total_price, status, created_at FROM purchases ORDER BY id DESC')
+    : getAllRows('SELECT id, part_id, part_name, buyer_email, quantity, unit_price, total_price, status, created_at FROM purchases WHERE buyer_email = ? ORDER BY id DESC', [currentUser.email]);
 
   return rows.map(normalizePurchaseRecord);
+}
+
+// "For you" list for the home page: returns EVERY part in the catalog.
+// For a logged-in buyer with purchase history, parts in the same category /
+// vehicle type as parts they bought before are listed first; everything else
+// follows, newest first. Guests (or buyers with no history) get all parts,
+// newest first.
+function listForYouParts(currentUser) {
+  const email = currentUser ? currentUser.email : null;
+  const allParts = listPublicParts(); // already ordered newest first
+
+  const history = email
+    ? getAllRows('SELECT DISTINCT part_id FROM purchases WHERE buyer_email = ?', [email])
+        .map((row) => getPartById(row.part_id))
+        .filter(Boolean)
+    : [];
+
+  if (!history.length) {
+    return { personalized: false, parts: allParts };
+  }
+
+  const categories = new Set(history.map((part) => part.category).filter(Boolean));
+  const vehicleTypes = new Set(history.map((part) => part.vehicle_type).filter(Boolean));
+
+  const scored = allParts.map((part) => ({
+    part,
+    score: (categories.has(part.category) ? 2 : 0) + (vehicleTypes.has(part.vehicle_type) ? 1 : 0)
+  }));
+
+  scored.sort((a, b) => b.score - a.score || b.part.id - a.part.id);
+
+  return { personalized: true, parts: scored.map((item) => item.part) };
+}
+
+// Admin-only: move an order through its lifecycle (pending -> processing ->
+// shipped -> delivered), or mark it cancelled. Regular users cannot call
+// this -- they can only view their own orders via listPurchases.
+function updatePurchaseStatus(currentUser, purchaseId, status) {
+  if (!currentUser || currentUser.role !== 'admin') {
+    const error = new Error('Only admin users can update order status.');
+    error.code = 'FORBIDDEN';
+    throw error;
+  }
+
+  const numericId = Number(purchaseId);
+  if (!Number.isFinite(numericId) || numericId <= 0) {
+    const error = new Error('Order not found.');
+    error.code = 'NOT_FOUND';
+    throw error;
+  }
+
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+  if (!ORDER_STATUSES.includes(normalizedStatus)) {
+    const error = new Error(`Status must be one of: ${ORDER_STATUSES.join(', ')}.`);
+    error.code = 'INVALID_STATUS';
+    throw error;
+  }
+
+  const existing = getSingleRow('SELECT id FROM purchases WHERE id = ?', [numericId]);
+  if (!existing) {
+    const error = new Error('Order not found.');
+    error.code = 'NOT_FOUND';
+    throw error;
+  }
+
+  database.run('UPDATE purchases SET status = ? WHERE id = ?', [normalizedStatus, numericId]);
+  persistDatabase();
+
+  const updated = getSingleRow(
+    'SELECT id, part_id, part_name, buyer_email, quantity, unit_price, total_price, status, created_at FROM purchases WHERE id = ?',
+    [numericId]
+  );
+
+  return normalizePurchaseRecord(updated);
 }
 
 function getUserByEmail(email) {
@@ -705,11 +768,12 @@ module.exports = {
   deletePart,
   purchasePart,
   listPurchases,
+  updatePurchaseStatus,
+  listForYouParts,
+  ORDER_STATUSES,
   getUserByEmail,
   updateUserAvatar,
   getPublicUserProfile,
-  getHomepageSpotlightPartId,
-  setHomepageSpotlightPartId,
   getHomepageFeaturedPartId,
   setHomepageFeaturedPartId
 };

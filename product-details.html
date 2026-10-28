@@ -457,7 +457,7 @@
 
     function formatPrice(price) {
       const numeric = Number(price);
-      return Number.isFinite(numeric) ? `$${numeric.toFixed(2)}` : String(price);
+      return Number.isFinite(numeric) ? `Rs. ${numeric.toFixed(2)}` : String(price);
     }
 
     function formatDate(value) {
@@ -538,23 +538,17 @@
       const params = new URLSearchParams(window.location.search);
       const partId = params.get('part');
 
-      if (partId) {
-        const response = await fetch(`/api/public/parts/${encodeURIComponent(partId)}`);
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || 'Unable to load the selected product.');
-        }
-
-        return data.part;
+      if (!partId) {
+        return null;
       }
 
-      const response = await fetch('/api/homepage');
+      const response = await fetch(`/api/public/parts/${encodeURIComponent(partId)}`);
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Unable to load homepage product.');
+        throw new Error(data.error || 'Unable to load the selected product.');
       }
 
-      return data.spotlightPart || null;
+      return data.part;
     }
 
     function renderEmptyState() {

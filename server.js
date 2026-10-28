@@ -13,10 +13,10 @@ const {
   deletePart,
   purchasePart,
   listPurchases,
+  updatePurchaseStatus,
+  listForYouParts,
   updateUserAvatar,
   getPublicUserProfile,
-  getHomepageSpotlightPartId,
-  setHomepageSpotlightPartId,
   getHomepageFeaturedPartId,
   setHomepageFeaturedPartId
 } = require('./db');
@@ -42,8 +42,6 @@ function resolveRequestUser(req) {
 
 function buildHomepageResponse() {
   const parts = listPublicParts();
-  const spotlightPartId = getHomepageSpotlightPartId();
-  const spotlightPart = spotlightPartId ? getPartById(spotlightPartId) : null;
   const featuredPartId = getHomepageFeaturedPartId();
   const featuredPart = featuredPartId ? getPartById(featuredPartId) : null;
 
@@ -56,7 +54,6 @@ function buildHomepageResponse() {
     .slice(0, 3);
 
   return {
-    spotlightPart,
     featuredPart,
     featuredParts,
     trendingParts,
@@ -156,6 +153,13 @@ app.get('/api/homepage', (_req, res) => {
   res.json(buildHomepageResponse());
 });
 
+// Works for guests too: with no logged-in user (or no purchase history) it
+// returns the newest in-stock parts instead of personalised picks.
+app.get('/api/for-you', (req, res) => {
+  const user = resolveRequestUser(req);
+  res.json(listForYouParts(user));
+});
+
 app.get('/api/purchases', (req, res) => {
   const user = resolveRequestUser(req);
   if (!user) {
@@ -166,32 +170,23 @@ app.get('/api/purchases', (req, res) => {
   res.json({ purchases: listPurchases(user) });
 });
 
-app.put('/api/homepage/spotlight', (req, res) => {
+// Admin-only: move an order through pending -> processing -> shipped ->
+// delivered, or mark it cancelled. updatePurchaseStatus itself enforces the
+// admin check, so a non-admin caller gets a 403 even if they guess an order id.
+app.put('/api/purchases/:id', (req, res) => {
   const user = resolveRequestUser(req);
   if (!user) {
     res.status(401).json({ error: 'Not logged in.' });
     return;
   }
 
-  if (user.role !== 'admin') {
-    res.status(403).json({ error: 'Only admin users can set the homepage spotlight.' });
-    return;
+  try {
+    const purchase = updatePurchaseStatus(user, Number(req.params.id), req.body && req.body.status);
+    res.json({ purchase });
+  } catch (error) {
+    const status = error.code === 'FORBIDDEN' ? 403 : error.code === 'NOT_FOUND' ? 404 : 400;
+    res.status(status).json({ error: error.message });
   }
-
-  const partId = Number((req.body && req.body.partId) || 0);
-  if (!Number.isFinite(partId) || partId <= 0) {
-    res.status(400).json({ error: 'A valid part must be selected.' });
-    return;
-  }
-
-  const part = getPartById(partId);
-  if (!part) {
-    res.status(404).json({ error: 'Part not found.' });
-    return;
-  }
-
-  setHomepageSpotlightPartId(partId);
-  res.json({ spotlightPart: part, ...buildHomepageResponse() });
 });
 
 app.put('/api/homepage/featured', (req, res) => {

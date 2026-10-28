@@ -555,31 +555,6 @@
       </div>
     </section>
 
-    <section class="panel table-card" id="homepage-spotlight-section" style="margin-top: 22px;">
-      <div class="toolbar">
-        <div>
-          <h2>Homepage spotlight</h2>
-          <p>Choose which product appears in the home page product details section.</p>
-        </div>
-        <span class="role-badge">Admin only</span>
-      </div>
-
-      <div class="form-grid" id="homepage-spotlight-admin">
-        <div>
-          <label for="homepage-spotlight-select">Select product</label>
-          <select id="homepage-spotlight-select"></select>
-        </div>
-        <div class="form-actions">
-          <button class="button blue" type="button" id="homepage-spotlight-save">Save spotlight</button>
-        </div>
-        <div class="card" style="background: rgba(255, 255, 255, 0.04); border-radius: 18px; padding: 18px;">
-          <strong id="homepage-spotlight-current" style="display: block; margin-bottom: 8px;">No spotlight selected.</strong>
-          <p id="homepage-spotlight-current-copy">The selected product will appear on the home page.</p>
-        </div>
-        <div id="homepage-spotlight-status" class="status" aria-live="polite"></div>
-      </div>
-    </section>
-
     <section class="panel table-card admin-segment" id="homepage-featured-section">
       <div class="toolbar">
         <div>
@@ -603,6 +578,37 @@
         </div>
         <div id="homepage-featured-status" class="status" aria-live="polite"></div>
       </div>
+    </section>
+
+    <section class="panel table-card admin-segment" id="orders-section">
+      <div class="toolbar">
+        <div>
+          <h2>Customer orders</h2>
+          <p>Review every order placed in the marketplace and update its status.</p>
+        </div>
+        <span class="role-badge">Admin only</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Part</th>
+              <th>Buyer</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Placed</th>
+              <th>Status</th>
+              <th>Update</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr><td colspan="8">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="orders-status" class="status" aria-live="polite"></div>
     </section>
 
     <section class="panel table-card" style="margin-top: 22px;">
@@ -671,13 +677,6 @@
     const refreshButton = document.getElementById('refresh-button');
     const tableNote = document.getElementById('table-note');
     const logoutHomeLink = document.getElementById('logout-home-link');
-    const homepageSpotlightSection = document.getElementById('homepage-spotlight-section');
-    const homepageSpotlightAdmin = document.getElementById('homepage-spotlight-admin');
-    const homepageSpotlightSelect = document.getElementById('homepage-spotlight-select');
-    const homepageSpotlightSave = document.getElementById('homepage-spotlight-save');
-    const homepageSpotlightCurrent = document.getElementById('homepage-spotlight-current');
-    const homepageSpotlightCurrentCopy = document.getElementById('homepage-spotlight-current-copy');
-    const homepageSpotlightStatus = document.getElementById('homepage-spotlight-status');
     const homepageFeaturedSection = document.getElementById('homepage-featured-section');
     const homepageFeaturedAdmin = document.getElementById('homepage-featured-admin');
     const homepageFeaturedSelect = document.getElementById('homepage-featured-select');
@@ -685,17 +684,19 @@
     const homepageFeaturedCurrent = document.getElementById('homepage-featured-current');
     const homepageFeaturedCurrentCopy = document.getElementById('homepage-featured-current-copy');
     const homepageFeaturedStatus = document.getElementById('homepage-featured-status');
+    const ordersSection = document.getElementById('orders-section');
+    const ordersTbody = document.getElementById('orders-tbody');
+    const ordersStatus = document.getElementById('orders-status');
+
+    // Mirrors the ORDER_STATUSES list enforced server-side in db.js --
+    // keep the two in sync if the lifecycle values ever change.
+    const ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
     const isAdmin = Boolean(sessionUser && sessionUser.role === 'admin');
 
     function setStatus(text, isError = false) {
       formStatus.textContent = text;
       formStatus.classList.toggle('error', isError);
-    }
-
-    function setSpotlightStatus(text, isError = false) {
-      homepageSpotlightStatus.textContent = text;
-      homepageSpotlightStatus.classList.toggle('error', isError);
     }
 
     function setFeaturedStatus(text, isError = false) {
@@ -752,28 +753,6 @@
       });
     }
 
-    function renderSpotlightOptions(parts) {
-      if (!isAdmin) {
-        homepageSpotlightSection.classList.add('hidden');
-        return;
-      }
-
-      homepageSpotlightSection.classList.remove('hidden');
-      if (!parts.length) {
-        homepageSpotlightSelect.innerHTML = '<option value="">No parts available</option>';
-        homepageSpotlightSelect.value = '';
-        homepageSpotlightSave.disabled = true;
-        homepageSpotlightCurrent.textContent = 'No spotlight selected.';
-        homepageSpotlightCurrentCopy.textContent = 'Add a product first, then select it here.';
-        return;
-      }
-
-      homepageSpotlightSave.disabled = false;
-      homepageSpotlightSelect.innerHTML = ['<option value="">Choose a product</option>']
-        .concat(parts.map((part) => `<option value="${part.id}">${escapeHtml(summarizePart(part))}</option>`))
-        .join('');
-    }
-
     function renderFeaturedOptions(parts) {
       if (!isAdmin) {
         homepageFeaturedSection.classList.add('hidden');
@@ -797,31 +776,6 @@
       homepageFeaturedSelect.innerHTML = ['<option value="">Choose a product</option>']
         .concat(parts.map((part) => `<option value="${part.id}">${escapeHtml(summarizePart(part))}</option>`))
         .join('');
-    }
-
-    async function loadHomepageSpotlight(parts) {
-      if (!isAdmin) {
-        return;
-      }
-
-      const response = await fetch('/api/homepage');
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Unable to load homepage spotlight.');
-      }
-
-      const spotlightPart = data.spotlightPart;
-      renderSpotlightOptions(parts);
-
-      if (spotlightPart) {
-        homepageSpotlightSelect.value = String(spotlightPart.id);
-        homepageSpotlightCurrent.textContent = summarizePart(spotlightPart);
-        homepageSpotlightCurrentCopy.textContent = spotlightPart.description;
-      } else {
-        homepageSpotlightSelect.value = '';
-        homepageSpotlightCurrent.textContent = 'No spotlight selected.';
-        homepageSpotlightCurrentCopy.textContent = 'The selected product will appear on the home page.';
-      }
     }
 
     async function loadHomepageFeatured(parts) {
@@ -851,7 +805,7 @@
 
     function formatPrice(price) {
       const numeric = Number(price);
-      return Number.isFinite(numeric) ? `$${numeric.toFixed(2)}` : String(price);
+      return Number.isFinite(numeric) ? `Rs. ${numeric.toFixed(2)}` : String(price);
     }
 
     function formatDate(value) {
@@ -873,7 +827,6 @@
 
       if (!parts.length) {
         partsTbody.innerHTML = `<tr><td colspan="6">No parts yet. Add your first product above.</td></tr>`;
-        renderSpotlightOptions([]);
         return parts;
       }
 
@@ -898,7 +851,6 @@
         `;
       }).join('');
 
-      renderSpotlightOptions(parts);
       return parts;
     }
 
@@ -1013,30 +965,6 @@
       window.location.href = 'login.html';
     }
 
-    async function saveHomepageSpotlight() {
-      const partId = Number(homepageSpotlightSelect.value);
-      if (!Number.isFinite(partId) || partId <= 0) {
-        setSpotlightStatus('Choose a valid product first.', true);
-        return;
-      }
-
-      const response = await fetch('/api/homepage/spotlight', {
-        method: 'PUT',
-        headers: requestHeaders(),
-        body: JSON.stringify({ partId })
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Unable to update spotlight.');
-      }
-
-      const spotlightPart = data.spotlightPart;
-      homepageSpotlightCurrent.textContent = summarizePart(spotlightPart);
-      homepageSpotlightCurrentCopy.textContent = spotlightPart.description;
-      setSpotlightStatus('Homepage spotlight updated.');
-    }
-
     async function saveHomepageFeatured() {
       const partId = Number(homepageFeaturedSelect.value);
       if (!Number.isFinite(partId) || partId <= 0) {
@@ -1061,16 +989,91 @@
       setFeaturedStatus('Homepage featured item updated.');
     }
 
+    function setOrdersStatus(text, isError = false) {
+      ordersStatus.textContent = text;
+      ordersStatus.classList.toggle('error', isError);
+    }
+
+    function statusOptionsMarkup(current) {
+      return ORDER_STATUSES.map((value) => `
+        <option value="${value}" ${value === current ? 'selected' : ''}>${value.charAt(0).toUpperCase() + value.slice(1)}</option>
+      `).join('');
+    }
+
+    async function loadOrders() {
+      if (!isAdmin) {
+        return;
+      }
+
+      const response = await fetch('/api/purchases', { headers: requestHeaders() });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to load orders.');
+      }
+
+      const orders = data.purchases || [];
+
+      if (!orders.length) {
+        ordersTbody.innerHTML = `<tr><td colspan="8">No orders yet.</td></tr>`;
+        return;
+      }
+
+      ordersTbody.innerHTML = orders.map((order) => `
+        <tr>
+          <td>GS-ORD-${String(order.id).padStart(6, '0')}</td>
+          <td>${escapeHtml(order.part_name)}</td>
+          <td>${escapeHtml(order.buyer_email)}</td>
+          <td>${order.quantity}</td>
+          <td>${formatPrice(order.total_price)}</td>
+          <td>${escapeHtml(formatDate(order.created_at))}</td>
+          <td>
+            <select class="order-status-select">
+              ${statusOptionsMarkup(order.status || 'pending')}
+            </select>
+          </td>
+          <td>
+            <button class="pill primary" type="button" data-action="update-order" data-id="${order.id}">Save</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function handleOrdersClick(event) {
+      const button = event.target.closest('button[data-action="update-order"]');
+      if (!button) {
+        return;
+      }
+
+      const id = button.getAttribute('data-id');
+      const row = button.closest('tr');
+      const select = row ? row.querySelector('.order-status-select') : null;
+      const status = select ? select.value : '';
+
+      const response = await fetch(`/api/purchases/${id}`, {
+        method: 'PUT',
+        headers: requestHeaders(),
+        body: JSON.stringify({ status })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to update order.');
+      }
+
+      setOrdersStatus(`Order GS-ORD-${String(id).padStart(6, '0')} marked as ${status}.`);
+      await loadOrders();
+    }
+
     userName.textContent = sessionUser ? sessionUser.name || 'GearShift user' : 'Guest';
     userEmail.textContent = sessionUser ? sessionUser.email : '-';
     userRole.textContent = sessionUser && sessionUser.role === 'admin' ? 'Admin' : 'User';
     userRoleCopy.textContent = sessionUser && sessionUser.role === 'admin' ? 'Can manage all marketplace parts.' : 'Can manage only their own parts.';
     roleBadge.textContent = sessionUser && sessionUser.role === 'admin' ? 'Admin dashboard' : 'User dashboard';
     if (!isAdmin) {
-      homepageSpotlightSection.classList.add('hidden');
-      homepageSpotlightAdmin.classList.add('hidden');
       homepageFeaturedSection.classList.add('hidden');
       homepageFeaturedAdmin.classList.add('hidden');
+      ordersSection.classList.add('hidden');
     }
     logoutHomeLink.addEventListener('click', handleLogout);
 
@@ -1103,17 +1106,19 @@
       handleTableClick(event).catch((error) => setStatus(error.message, true));
     });
 
-    homepageSpotlightSave.addEventListener('click', () => {
-      saveHomepageSpotlight().catch((error) => setSpotlightStatus(error.message, true));
-    });
-
     homepageFeaturedSave.addEventListener('click', () => {
       saveHomepageFeatured().catch((error) => setFeaturedStatus(error.message, true));
     });
 
+    ordersTbody.addEventListener('click', (event) => {
+      handleOrdersClick(event).catch((error) => setOrdersStatus(error.message, true));
+    });
+
     loadParts()
-      .then((parts) => Promise.all([loadHomepageSpotlight(parts), loadHomepageFeatured(parts)]))
+      .then((parts) => loadHomepageFeatured(parts))
       .catch((error) => setStatus(error.message, true));
+
+    loadOrders().catch((error) => setOrdersStatus(error.message, true));
     })();
   </script>
 </body>
