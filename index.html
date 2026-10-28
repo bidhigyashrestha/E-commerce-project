@@ -1402,7 +1402,7 @@
 
       forYouNote.textContent = data.personalized
         ? 'All parts, with ones similar to what you have bought before shown first.'
-        : 'Every part in the catalog, newest first.';
+        : '';
       renderPartCards(forYouGrid, forYouEmpty, data.parts || [], 'View details');
     }
 
